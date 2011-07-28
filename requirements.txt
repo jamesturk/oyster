@@ -1,0 +1,2 @@
+scrapelib
+pymongo>=1.11
