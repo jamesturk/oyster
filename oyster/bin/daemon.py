@@ -15,13 +15,16 @@ class UpdateProcess(multiprocessing.Process):
     def run(self):
         while True:
             task = self.task_q.get()
+
+            # break on 'None' poison pill
             if task is None:
                 self.task_q.task_done()
                 break
 
             # update tracked document
-            data = urllib.urlopen(task['url']).read()
-            self.client.add_version(task, data)
+            self.client.update(task)
+
+            # decrement count for semaphore
             self.task_q.task_done()
 
 
