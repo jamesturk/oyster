@@ -2,6 +2,7 @@ import datetime
 import hashlib
 import random
 import sys
+import urllib
 
 import pymongo
 import gridfs
@@ -64,29 +65,43 @@ class Client(object):
 
 
     def update(self, doc):
-        # assume we're going to do the put
         do_put = True
+        error = False
 
         # update strategies could be implemented here as well
-        data = self.scraper.urlopen(doc['url'])
+        try:
+            data = self.scraper.urlopen(urllib.quote(doc['url']))
+            content_type = data.response.headers['content-type']
+        except scrapelib.HTTPError:
+            # TODO: log error
+            do_put = False
+            error = True
 
         # versioning is a concept for future use, but here's how it can work:
         #  versioning functions take doc & data, and return True if data is
         #  different, since they have access to doc, they can also modify
         #  certain attributes as needed
-        if doc['versioning'] == 'md5':
-            do_put = self.md5_versioning(doc, data)
-        else:
-            raise ValueError('unknown versioning strategy "%s"' %
-                             doc['versioning'])
 
         if do_put:
-            self.fs.put(data, filename=doc['url'], **doc['metadata'])
+            if doc['versioning'] == 'md5':
+                do_put = self.md5_versioning(doc, data)
+            else:
+                raise ValueError('unknown versioning strategy "%s"' %
+                                 doc['versioning'])
+
+        if do_put:
+            self.fs.put(data, filename=doc['url'], mimetype=content_type,
+                        **doc['metadata'])
 
         # _last_update/_next_update are separate from question of versioning
         doc['_last_update'] = datetime.datetime.utcnow()
         doc['_next_update'] = (doc['_last_update'] +
                                datetime.timedelta(minutes=doc['update_mins']))
+        if error:
+            doc['_consecutive_errors'] = doc.get('_consecutive_errors', 0) + 1
+        else:
+            doc['_consecutive_errors'] = 0
+
         self.db.tracked.save(doc, safe=True)
 
 
