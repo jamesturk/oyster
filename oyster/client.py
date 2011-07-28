@@ -28,6 +28,7 @@ class Client(object):
                                          retry_wait_seconds=5
                                         )
 
+
     def _wipe(self):
         """ exists primarily for debug use, wipes entire db """
         self.db.drop_collection('tracked')
@@ -67,7 +68,7 @@ class Client(object):
         do_put = True
 
         # update strategies could be implemented here as well
-        resp = self.scraper.urlopen(doc['url'])
+        data = self.scraper.urlopen(doc['url'])
 
         # versioning is a concept for future use, but here's how it can work:
         #  versioning functions take doc & data, and return True if data is
