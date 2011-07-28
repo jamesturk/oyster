@@ -2,7 +2,7 @@ import multiprocessing
 import time
 import urllib
 
-from client import Client
+from ..client import Client
 
 class UpdateProcess(multiprocessing.Process):
 
