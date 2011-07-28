@@ -70,7 +70,8 @@ class Client(object):
 
         # update strategies could be implemented here as well
         try:
-            data = self.scraper.urlopen(urllib.quote(doc['url']))
+            url = doc['url'].replace(' ', '%20')
+            data = self.scraper.urlopen(url)
             content_type = data.response.headers['content-type']
         except scrapelib.HTTPError:
             # TODO: log error
