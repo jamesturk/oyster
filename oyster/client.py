@@ -11,14 +11,22 @@ import scrapelib
 class Client(object):
 
 
-    def __init__(self, host='localhost', port=27017,
-                 database='oyster', collection='fs'):
-        self.db = pymongo.Connection(host, port)[database]
-        self.fs = gridfs.GridFS(self.db, collection)
-        self._collection_name = collection
-        # TODO: add some scrapelib config options
-        self.scraper = scrapelib.Scraper()
-
+    def __init__(self, mongo_host='localhost', mongo_port=27017,
+                 mongo_db='oyster', gridfs_collection='fs',
+                 user_agent='oyster', rpm=600, follow_robots=False,
+                 raise_errors=True, timeout=None, retry_attempts=0,
+                 retry_wait_seconds=5):
+        self.db = pymongo.Connection(mongo_host, mongo_port)[mongo_db]
+        self.fs = gridfs.GridFS(self.db, gridfs_collection)
+        self._collection_name = gridfs_collection
+        self.scraper = scrapelib.Scraper(user_agent=user_agent,
+                                         requests_per_minute=rpm,
+                                         follow_robots=False,
+                                         raise_errors=True,
+                                         timeout=None,
+                                         retry_attempts=0,
+                                         retry_wait_seconds=5
+                                        )
 
     def _wipe(self):
         """ exists primarily for debug use, wipes entire db """
