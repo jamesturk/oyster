@@ -1,5 +1,5 @@
-from flask import Flask
-from .client import Client
+from flask import Flask, make_response
+from oyster.client import Client
 
 app = Flask('oyster')
 
@@ -12,7 +12,10 @@ def show_doc(url, version):
     c = Client()
     if version == 'latest':
         version = -1
-    return c.get_version(url, version).read()
+    doc = c.get_version(url, version)
+    resp = make_response(doc.read())
+    resp.headers['content-type'] = doc.mimetype
+    return resp
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
