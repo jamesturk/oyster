@@ -1,19 +1,25 @@
-from flask import Flask, make_response
+import flask
 from oyster.client import Client
 
-app = Flask('oyster')
+app = flask.Flask('oyster')
+client = Client()
 
-@app.route('/doc/')
+@app.route('/status/')
 def doc_list():
-    pass
+    status = {
+        'queue_size': app.work_queue.qsize(),
+        'tracking': client.db.tracked.count(),
+        'need_update': client.get_update_queue_size(),
+    }
+    return flask.jsonify(**status)
+
 
 @app.route('/doc/<path:url>/<version>')
 def show_doc(url, version):
-    c = Client()
     if version == 'latest':
         version = -1
-    doc = c.get_version(url, version)
-    resp = make_response(doc.read())
+    doc = client.get_version(url, version)
+    resp = flask.make_response(doc.read())
     resp.headers['content-type'] = doc.mimetype
     return resp
 

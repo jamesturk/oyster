@@ -1,8 +1,9 @@
 import multiprocessing
-import signal
 import threading
 import time
 import urllib
+
+import flask
 
 from oyster.client import Client
 from oyster.web import app
@@ -32,49 +33,6 @@ class UpdateProcess(multiprocessing.Process):
             self.task_q.task_done()
 
 
-class Producer(threading.Thread):
-    def __init__(self, queue, sleep_length):
-        super(Producer, self).__init__()
-        self.queue = queue
-        self.sleep_length = sleep_length
-        self.client = Client()
-        self._stop = threading.Event()
-
-    def run(self):
-        # go forever
-        while not self.stopped():
-
-            # get everything overdue and put it into the queue
-            next_set = self.client.get_update_queue()
-            if next_set:
-                for item in next_set:
-                    self.queue.put(item)
-
-                # do all queued work
-                self.queue.join()
-
-            else:
-                # allow for a quiet period if queue is exhausted
-                time.sleep(self.sleep_length)
-
-    def stop(self):
-        self._stop.set()
-
-    def stopped(self):
-        return self._stop.is_set()
-
-
-def main_process():
-    num_processes = 4
-
-    work_queue = multiprocessing.JoinableQueue()
-    producer = Producer(work_queue, 60)
-    workers = [UpdateProcess(work_queue) for i in xrange(num_processes)]
-    for w in workers:
-        w.start()
-    producer.start()
-
-
 def flask_process():
     app.run(debug=True)
 
@@ -84,20 +42,31 @@ def main():
     debug = True
 
     work_queue = multiprocessing.JoinableQueue()
-    producer = Producer(work_queue, 60)
     workers = [UpdateProcess(work_queue) for i in xrange(num_processes)]
     server = multiprocessing.Process(target=flask_process)
 
-    def cleanup(signal, frame):
-        for worker in workers:
-            worker.terminate()
-        producer.stop()
-        server.terminate()
+    # give flask access to our work_queue
+    app.work_queue = work_queue
 
     for worker in workers:
         worker.start()
-    producer.start()
     server.start()
+
+    client = Client()
+
+    while True:
+        # get everything overdue and put it into the queue
+        next_set = client.get_update_queue()
+        if next_set:
+            for item in next_set:
+                work_queue.put(item)
+
+            # do all queued work
+            work_queue.join()
+
+        else:
+            # allow for a quiet period if queue is exhausted
+            time.sleep(60)
 
 if __name__ == '__main__':
     main()
