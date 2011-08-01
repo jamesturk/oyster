@@ -87,10 +87,9 @@ class Client(object):
             url = doc['url'].replace(' ', '%20')
             data = self.scraper.urlopen(url)
             content_type = data.response.headers['content-type']
-        except scrapelib.HTTPError as e:
-            # TODO: log error
+        except Exception as e:
             do_put = False
-            error = e
+            error = str(e)
 
         # versioning is a concept for future use, but here's how it can work:
         #  versioning functions take doc & data, and return True if data is
@@ -116,7 +115,6 @@ class Client(object):
             doc['_consecutive_errors'] = doc.get('_consecutive_errors', 0) + 1
         else:
             doc['_consecutive_errors'] = 0
-
 
         self.log('update', url=url, new_doc=do_put, error=error)
 

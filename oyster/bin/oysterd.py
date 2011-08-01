@@ -64,9 +64,9 @@ def main():
             # do all queued work
             work_queue.join()
 
-        else:
-            # allow for a quiet period if queue is exhausted
-            time.sleep(60)
+        # sleep for a minute between attempts to check the queue
+        time.sleep(60)
+
 
 if __name__ == '__main__':
     main()
