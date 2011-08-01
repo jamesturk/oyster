@@ -43,11 +43,14 @@ class Client(object):
         self.db.drop_collection('%s.files' % self._collection_name)
         self.db.drop_collection('logs')
 
-    def log(self, action, error=False, **kwargs):
+
+    def log(self, action, url, error=False, **kwargs):
         kwargs['action'] = action
+        kwargs['url'] = url
         kwargs['error'] = error
         kwargs['timestamp'] = datetime.datetime.utcnow()
         self.db.logs.insert(kwargs)
+
 
     def track_url(self, url, versioning='md5', update_mins=60*24,
                   **kwargs):
@@ -107,14 +110,14 @@ class Client(object):
             self.fs.put(data, filename=doc['url'], mimetype=content_type,
                         **doc['metadata'])
 
-        # _last_update/_next_update are separate from question of versioning
-        doc['_last_update'] = datetime.datetime.utcnow()
-        doc['_next_update'] = (doc['_last_update'] +
-                               datetime.timedelta(minutes=doc['update_mins']))
+        # last_update/next_update are separate from question of versioning
+        doc['last_update'] = datetime.datetime.utcnow()
+        doc['next_update'] = (doc['last_update'] +
+                              datetime.timedelta(minutes=doc['update_mins']))
         if error:
-            doc['_consecutive_errors'] = doc.get('_consecutive_errors', 0) + 1
+            doc['consecutive_errors'] = doc.get('consecutive_errors', 0) + 1
         else:
-            doc['_consecutive_errors'] = 0
+            doc['consecutive_errors'] = 0
 
         self.log('update', url=url, new_doc=do_put, error=error)
 
@@ -141,15 +144,15 @@ class Client(object):
         # results are always sorted by random to avoid piling on single server
 
         # first we try to update anything that we've never retrieved
-        new = self.db.tracked.find({'_next_update':
+        new = self.db.tracked.find({'next_update':
                                     {'$exists': False}}).sort('_random')
         if max:
             new = new.limit(max)
 
         queue = list(new)
 
-        # pull the rest from those for which _next_update is in the past
-        next = self.db.tracked.find({'_next_update':
+        # pull the rest from those for which next_update is in the past
+        next = self.db.tracked.find({'next_update':
              {'$lt': datetime.datetime.utcnow()}}).sort('_random')
         if max:
             max -= len(queue)
