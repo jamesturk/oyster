@@ -13,6 +13,11 @@ def doc_list():
     }
     return flask.jsonify(**status)
 
+@app.route('/log/')
+def log_view():
+    logs = client.db.logs.find().sort('$natural', -1)
+    return flask.render_template('logs.html', logs=logs)
+
 
 @app.route('/doc/<path:url>/<version>')
 def show_doc(url, version):

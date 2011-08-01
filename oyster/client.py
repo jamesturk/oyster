@@ -13,11 +13,17 @@ class Client(object):
 
 
     def __init__(self, mongo_host='localhost', mongo_port=27017,
-                 mongo_db='oyster', gridfs_collection='fs',
+                 mongo_db='oyster', gridfs_collection='fs', 
+                 mongo_log_maxsize=100000000,
                  user_agent='oyster', rpm=600, follow_robots=False,
                  raise_errors=True, timeout=None, retry_attempts=0,
                  retry_wait_seconds=5):
         self.db = pymongo.Connection(mongo_host, mongo_port)[mongo_db]
+        try:
+            self.db.create_collection('logs', capped=True,
+                                      size=mongo_log_maxsize)
+        except pymongo.errors.CollectionInvalid:
+            pass
         self.fs = gridfs.GridFS(self.db, gridfs_collection)
         self._collection_name = gridfs_collection
         self.scraper = scrapelib.Scraper(user_agent=user_agent,
@@ -35,7 +41,13 @@ class Client(object):
         self.db.drop_collection('tracked')
         self.db.drop_collection('%s.chunks' % self._collection_name)
         self.db.drop_collection('%s.files' % self._collection_name)
+        self.db.drop_collection('logs')
 
+    def log(self, action, error=False, **kwargs):
+        kwargs['action'] = action
+        kwargs['error'] = error
+        kwargs['timestamp'] = datetime.datetime.utcnow()
+        self.db.logs.insert(kwargs)
 
     def track_url(self, url, versioning='md5', update_mins=60*24,
                   **kwargs):
@@ -46,8 +58,10 @@ class Client(object):
             URL to start tracking
         """
         if self.db.tracked.find_one({'url': url}):
+            self.log('track', url=url, error='already tracked')
             raise ValueError('%s is already tracked' % url)
 
+        self.log('track', url=url)
         self.db.tracked.insert(dict(url=url, versioning=versioning,
                                     update_mins=update_mins,
                                     _random=random.randint(0, sys.maxint),
@@ -73,10 +87,10 @@ class Client(object):
             url = doc['url'].replace(' ', '%20')
             data = self.scraper.urlopen(url)
             content_type = data.response.headers['content-type']
-        except scrapelib.HTTPError:
+        except scrapelib.HTTPError as e:
             # TODO: log error
             do_put = False
-            error = True
+            error = e
 
         # versioning is a concept for future use, but here's how it can work:
         #  versioning functions take doc & data, and return True if data is
@@ -103,6 +117,9 @@ class Client(object):
         else:
             doc['_consecutive_errors'] = 0
 
+
+        self.log('update', url=url, new_doc=do_put, error=error)
+
         self.db.tracked.save(doc, safe=True)
 
 
@@ -123,8 +140,7 @@ class Client(object):
 
 
     def get_update_queue(self, max=0):
-        # results are always sorted by random to avoid piling on
-        # a single server
+        # results are always sorted by random to avoid piling on single server
 
         # first we try to update anything that we've never retrieved
         new = self.db.tracked.find({'_next_update':
