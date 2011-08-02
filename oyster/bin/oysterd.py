@@ -66,12 +66,14 @@ def main():
         help='retry wait period (seconds) when making requests (default: 5)')
     args = parser.parse_args()
 
+    work_queue = multiprocessing.JoinableQueue()
+
     # workers defaults to cpu_count
     if not args.workers:
         args.workers = multiprocessing.cpu_count()
     workers = [UpdateProcess(work_queue) for i in xrange(args.workers)]
-    work_queue = multiprocessing.JoinableQueue()
 
+    # separate process for Flask app
     def flask_process():
         app.run(debug=args.debug, port=args.port)
     server = multiprocessing.Process(target=flask_process)
@@ -79,11 +81,20 @@ def main():
     # give flask access to our work_queue
     app.work_queue = work_queue
 
+    # start all processes
     for worker in workers:
         worker.start()
     server.start()
 
-    client = Client()
+    client = Client(mongo_host=args.mongo_host,
+                    mongo_port=args.mongo_port,
+                    mongo_db=args.mongo_db,
+                    mongo_log_maxsize=args.logsize,
+                    user_agent=args.useragent,
+                    rpm=args.rpm,
+                    timeout=args.timeout,
+                    retry_attempts=args.retry_attempts,
+                    retry_wait_seconds=args.retry_wait_seconds)
 
     while True:
         # get everything overdue and put it into the queue
