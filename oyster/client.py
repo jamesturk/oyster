@@ -13,26 +13,24 @@ class Client(object):
 
 
     def __init__(self, mongo_host='localhost', mongo_port=27017,
-                 mongo_db='oyster', gridfs_collection='fs', 
-                 mongo_log_maxsize=100000000,
-                 user_agent='oyster', rpm=600, follow_robots=False,
-                 raise_errors=True, timeout=None, retry_attempts=0,
-                 retry_wait_seconds=5):
+                 mongo_db='oyster', mongo_log_maxsize=100000000,
+                 user_agent='oyster', rpm=600, timeout=None,
+                 retry_attempts=0, retry_wait_seconds=5):
         self.db = pymongo.Connection(mongo_host, mongo_port)[mongo_db]
         try:
             self.db.create_collection('logs', capped=True,
                                       size=mongo_log_maxsize)
         except pymongo.errors.CollectionInvalid:
             pass
-        self.fs = gridfs.GridFS(self.db, gridfs_collection)
-        self._collection_name = gridfs_collection
+        self._collection_name = 'fs'
+        self.fs = gridfs.GridFS(self.db, self._collection_name)
         self.scraper = scrapelib.Scraper(user_agent=user_agent,
                                          requests_per_minute=rpm,
                                          follow_robots=False,
                                          raise_errors=True,
-                                         timeout=None,
-                                         retry_attempts=0,
-                                         retry_wait_seconds=5
+                                         timeout=timeout,
+                                         retry_attempts=retry_attempts,
+                                         retry_wait_seconds=retry_wait_seconds
                                         )
 
 
