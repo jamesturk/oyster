@@ -6,8 +6,8 @@ Oyster Logs
 
 {% block body %}
 
-<div class="span-2 ">
-{% if prev_offset %}
+<div class="span-2">
+{% if offset %}
 <a class="button" href="/log/?offset={{prev_offset}}">&laquo; Prev</a>
 {% endif %}
 &nbsp;
@@ -22,17 +22,17 @@ Oyster Logs
 <div class="span-18">
 <table>
     <tr>
-        <th>&nbsp;&nbsp;&nbsp;</th>
         <th>action</th>
         <th>description</th>
         <th>timestamp</th>
+        <th>&nbsp;</th>
     </tr>
     {% for log in logs %}
-        <tr>
-            <td>{% if log.error %}{{log.error}}{% endif %}</td>
+        <tr{% if log.error %} class="error" {% endif %}>
             <td>{{log.action}}</td>
             <td><a href="/tracked/{{log.url}}">{{log.url}}</td>
             <td>{{log.timestamp}}</td>
+            <td>{% if log.error %}{{log.error}}{% endif %}</td>
         </tr>
     {% endfor %}
 </table>

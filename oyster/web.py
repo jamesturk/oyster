@@ -39,7 +39,8 @@ def log_view():
     logs = client.db.logs.find().sort('$natural', -1).skip(offset).limit(size)
     return flask.render_template('logs.html', logs=logs,
                                  prev_offset=prev_offset,
-                                 next_offset=next_offset)
+                                 next_offset=next_offset,
+                                 offset=offset)
 
 
 @app.route('/tracked/')
