@@ -1,5 +1,6 @@
 import json
 import datetime
+import functools
 
 import flask
 import pymongo.objectid
@@ -17,36 +18,53 @@ class JSONEncoder(json.JSONEncoder):
             return super(JSONEncoder, self).default(obj)
 
 
+def api_wrapper(template=None):
+    def wrapper(func):
+        @functools.wraps(func)
+        def newfunc(*args, **kwargs):
+            data = func(*args, **kwargs)
+            if 'json' in flask.request.args or not template:
+                return json.dumps(data, cls=JSONEncoder)
+            else:
+                return flask.render_template(template, **data)
+
+        return newfunc
+    return wrapper
+
+
 app = flask.Flask('oyster')
 client = Client()
 
+
 @app.route('/status/')
+@api_wrapper()
 def doc_list():
     status = {
         'queue_size': app.work_queue.qsize(),
         'tracking': client.db.tracked.count(),
         'need_update': client.get_update_queue_size(),
     }
-    return json.dumps(status)
+    return status
 
 
 @app.route('/log/')
+@api_wrapper('logs.html')
 def log_view():
     offset = int(flask.request.args.get('offset', 0))
     size = 100
     prev_offset = max(offset - size, 0)
     next_offset = offset + size
     logs = client.db.logs.find().sort('$natural', -1).skip(offset).limit(size)
-    return flask.render_template('logs.html', logs=logs,
-                                 prev_offset=prev_offset,
-                                 next_offset=next_offset,
-                                 offset=offset)
+    return dict(logs=logs, prev_offset=prev_offset,
+                next_offset=next_offset, offset=offset)
 
 
 @app.route('/tracked/')
+@api_wrapper()
 def tracked():
     tracked = list(client.db.tracked.find())
     return json.dumps(tracked, cls=JSONEncoder)
+
 
 @app.route('/tracked/<path:url>')
 def tracked_view(url):
