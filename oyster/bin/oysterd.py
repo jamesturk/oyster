@@ -12,17 +12,17 @@ from oyster.web import app
 
 class UpdateProcess(multiprocessing.Process):
 
-    def __init__(self, task_q):
+    def __init__(self, task_q, client):
         super(UpdateProcess, self).__init__()
         self.task_q = task_q
-        self.client = Client()
+        self.client = client
 
 
     def run(self):
         while True:
             task = self.task_q.get()
 
-            # break on 'None' poison pill
+            # break on 'None' poison pill -- doesn't actually happen currently
             if task is None:
                 self.task_q.task_done()
                 break
@@ -34,6 +34,16 @@ class UpdateProcess(multiprocessing.Process):
             self.task_q.task_done()
 
 
+def _client_from_args(args):
+    return Client(mongo_host=args.mongo_host,
+                  mongo_port=args.mongo_port,
+                  mongo_db=args.mongo_db,
+                  mongo_log_maxsize=args.logsize,
+                  user_agent=args.useragent,
+                  rpm=args.rpm,
+                  timeout=args.timeout,
+                  retry_attempts=args.retry_attempts,
+                  retry_wait_seconds=args.retry_wait)
 
 
 def main():
@@ -67,11 +77,13 @@ def main():
     args = parser.parse_args()
 
     work_queue = multiprocessing.JoinableQueue()
+    client = _client_from_args(args)
 
     # workers defaults to cpu_count
     if not args.workers:
         args.workers = multiprocessing.cpu_count()
-    workers = [UpdateProcess(work_queue) for i in xrange(args.workers)]
+    workers = [UpdateProcess(work_queue, _client_from_args(args))
+               for i in xrange(args.workers)]
 
     # separate process for Flask app
     def flask_process():
@@ -85,16 +97,6 @@ def main():
     for worker in workers:
         worker.start()
     server.start()
-
-    client = Client(mongo_host=args.mongo_host,
-                    mongo_port=args.mongo_port,
-                    mongo_db=args.mongo_db,
-                    mongo_log_maxsize=args.logsize,
-                    user_agent=args.useragent,
-                    rpm=args.rpm,
-                    timeout=args.timeout,
-                    retry_attempts=args.retry_attempts,
-                    retry_wait_seconds=args.retry_wait_seconds)
 
     while True:
         # get everything overdue and put it into the queue
