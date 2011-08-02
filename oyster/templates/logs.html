@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+    <body>
+
+        <table>
+            <tr>
+                <th>error</th>
+                <th>action</th>
+                <th>description</th>
+                <th>timestamp</th>
+            </tr>
+            {% for log in logs %}
+                <tr>
+                    <td>{% if log.error %}{{log.error}}{% endif %}</td>
+                    <td>{{log.action}}</td>
+                    <td><a href="/tracked/{{log.url}}">{{log.url}}</td>
+                    <td>{{log.timestamp}}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    </body>
+</html>

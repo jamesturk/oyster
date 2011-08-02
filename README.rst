@@ -15,11 +15,6 @@ Source is available via `GitHub <http://github.com/sunlightlabs/oyster/>`_
 TODO
 ====
 
-* turn daemon code into a real oysterd
-* internal logging
-* oyster shell commands
-    * status
-    * track
 * oysterweb
     * dashboard
     * errors
