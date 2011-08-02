@@ -1,22 +1,41 @@
-<!doctype html>
-<html>
-    <body>
+{% extends "base.html" %}
 
-        <table>
-            <tr>
-                <th>error</th>
-                <th>action</th>
-                <th>description</th>
-                <th>timestamp</th>
-            </tr>
-            {% for log in logs %}
-                <tr>
-                    <td>{% if log.error %}{{log.error}}{% endif %}</td>
-                    <td>{{log.action}}</td>
-                    <td><a href="/tracked/{{log.url}}">{{log.url}}</td>
-                    <td>{{log.timestamp}}</td>
-                </tr>
-            {% endfor %}
-        </table>
-    </body>
-</html>
+{% block heading %}
+Oyster Logs
+{% endblock %}
+
+{% block body %}
+
+<div class="span-2 ">
+{% if prev_offset %}
+<a class="button" href="/log/?offset={{prev_offset}}">&laquo; Prev</a>
+{% endif %}
+&nbsp;
+</div>
+
+<div class="span-2 prepend-14 last">
+{% if next_offset %}
+<a class="button" href="/log/?offset={{next_offset}}">Next &raquo;</a>
+{% endif %}
+</div>
+
+<div class="span-18">
+<table>
+    <tr>
+        <th>&nbsp;&nbsp;&nbsp;</th>
+        <th>action</th>
+        <th>description</th>
+        <th>timestamp</th>
+    </tr>
+    {% for log in logs %}
+        <tr>
+            <td>{% if log.error %}{{log.error}}{% endif %}</td>
+            <td>{{log.action}}</td>
+            <td><a href="/tracked/{{log.url}}">{{log.url}}</td>
+            <td>{{log.timestamp}}</td>
+        </tr>
+    {% endfor %}
+</table>
+</div>
+
+{% endblock %}

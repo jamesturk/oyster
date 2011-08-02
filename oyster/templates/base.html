@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+    <head>
+        <title>{% block title %} {% endblock %} </title>
+        <link rel="stylesheet" href="/static/blueprint/screen.css" type="text/css" media="screen, projection">
+        <link rel="stylesheet" href="/static/blueprint/print.css" type="text/css" media="print">
+        <!--[if lt IE 8]>
+          <link rel="stylesheet" href="css/blueprint/ie.css" type="text/css" media="screen, projection">
+          <![endif]-->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+        <style type="text/css">
+            body { font-family: sans-serif; }
+            table { border-spacing: 0px; margin-top: 20px; }
+            th { border-bottom: 2px solid black; }
+            a.button { padding: 0.5em 1em 0.5em 1em; border: 2px solid black; font-weight: bold; }
+            /* div.heading { border-bottom: 3px solid white; } */
+        </style>
+    </head>
+    <body>
+    <div class="container">
+        <div class="span-24 heading">
+            <h1>
+            {% block heading %}
+            {% endblock heading %}
+            </h1>
+        </div>
+        <div class="span-18">
+        {% block body %}
+        {% endblock %}
+        </div>
+    </div>
+    </body>
+</html>

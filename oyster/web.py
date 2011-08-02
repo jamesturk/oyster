@@ -32,8 +32,14 @@ def doc_list():
 
 @app.route('/log/')
 def log_view():
-    logs = client.db.logs.find().sort('$natural', -1)
-    return flask.render_template('logs.html', logs=logs)
+    offset = int(flask.request.args.get('offset', 0))
+    size = 100
+    prev_offset = max(offset - size, 0)
+    next_offset = offset + size
+    logs = client.db.logs.find().sort('$natural', -1).skip(offset).limit(size)
+    return flask.render_template('logs.html', logs=logs,
+                                 prev_offset=prev_offset,
+                                 next_offset=next_offset)
 
 
 @app.route('/tracked/')
