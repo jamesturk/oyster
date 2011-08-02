@@ -36,6 +36,11 @@ def log_view():
     return flask.render_template('logs.html', logs=logs)
 
 
+@app.route('/tracked/')
+def tracked():
+    tracked = list(client.db.tracked.find())
+    return json.dumps(tracked, cls=JSONEncoder)
+
 @app.route('/tracked/<path:url>')
 def tracked_view(url):
     doc = client.db.tracked.find_one({'url': url})
