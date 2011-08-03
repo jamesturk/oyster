@@ -17,7 +17,6 @@ TODO
 
 * oysterweb
     * dashboard
-    * errors
     * document access
 * real testing of internals
 
