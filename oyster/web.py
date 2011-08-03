@@ -55,7 +55,7 @@ def log_view():
     prev_offset = max(offset - size, 0)
     next_offset = offset + size
     logs = client.db.logs.find().sort('$natural', -1).skip(offset).limit(size)
-    return dict(logs=logs, prev_offset=prev_offset,
+    return dict(logs=list(logs), prev_offset=prev_offset,
                 next_offset=next_offset, offset=offset)
 
 
