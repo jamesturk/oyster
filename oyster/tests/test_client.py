@@ -1,7 +1,10 @@
+import time
 import datetime
 from unittest import TestCase
+
 from nose.tools import assert_raises
 import pymongo
+
 from oyster.client import Client
 
 
@@ -118,3 +121,51 @@ class ClientTests(TestCase):
 
         obj = self.client.db.tracked.find_one()
         assert obj['consecutive_errors'] == 2
+
+
+    def test_all_versions(self):
+        random_url = 'http://en.wikipedia.org/wiki/Special:Random'
+        self.client.track_url(random_url)
+        obj = self.client.db.tracked.find_one()
+        self.client.update(obj)
+
+        versions = self.client.get_all_versions(random_url)
+        assert versions[0].filename == random_url
+
+        self.client.update(obj)
+        assert len(self.client.get_all_versions(random_url)) == 2
+
+
+    def test_get_update_queue(self):
+        self.client.track_url('never-updates', update_mins=0.01)
+        self.client.track_url('fake-1', update_mins=0.01)
+        self.client.track_url('fake-2', update_mins=0.01)
+        self.client.track_url('fake-3', update_mins=0.01)
+
+        never = self.client.db.tracked.find_one(dict(url='never-updates'))
+        fake1 = self.client.db.tracked.find_one(dict(url='fake-1'))
+        fake2 = self.client.db.tracked.find_one(dict(url='fake-2'))
+        fake3 = self.client.db.tracked.find_one(dict(url='fake-3'))
+
+        # 4 in queue, ordered by random
+        queue = self.client.get_update_queue()
+        assert len(queue) == 4
+        assert queue[0]['_random'] < queue[1]['_random'] < queue[2]['_random']
+
+        # update a few
+        self.client.update(fake1)
+        self.client.update(fake2)
+        self.client.update(fake3)
+
+        # queue should only have never in it
+        queue = self.client.get_update_queue()
+        assert len(queue) == 1
+
+        # allow a second to pass
+        time.sleep(1)
+
+        # queue should be full, but start with the un-updated one
+        queue = self.client.get_update_queue()
+        assert len(queue) == 4
+        assert queue[0]['_id'] == never['_id']
+
