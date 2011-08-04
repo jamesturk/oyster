@@ -64,7 +64,8 @@ class ClientTests(TestCase):
 
 
     def test_update(self):
-        self.client.track_url('http://google.com', update_mins=60)
+        # get a single document tracked
+        self.client.track_url('http://example.com', update_mins=60, pi=3)
         obj = self.client.db.tracked.find_one()
         self.client.update(obj)
 
@@ -73,4 +74,47 @@ class ClientTests(TestCase):
         assert (newobj['last_update'] +
                 datetime.timedelta(minutes=newobj['update_mins']) ==
                 newobj['next_update'])
+        first_update = newobj['last_update']
         assert newobj['consecutive_errors'] == 0
+
+        # check that document exists in database
+        doc = self.client.fs.get_last_version()
+        assert doc.filename == 'http://example.com'
+        assert doc.content_type.startswith('text/html')
+        assert doc.pi == 3
+
+        # check logs
+        assert self.client.db.logs.find({'action': 'update'}).count() == 1
+
+        # and do an update..
+        self.client.update(obj)
+
+        # hopefully example.com hasn't changed, this tests that md5 worked
+        assert self.client.db.fs.files.count() == 1
+
+        # check that appropriate metadata updated
+        newobj = self.client.db.tracked.find_one()
+        assert first_update < newobj['last_update']
+
+        # check that logs updated
+        assert self.client.db.logs.find({'action': 'update'}).count() == 2
+
+
+    def test_update_failure(self):
+        # track a non-existent URL
+        self.client.track_url('http://not_a_url')
+        obj = self.client.db.tracked.find_one()
+        self.client.update(obj)
+
+        obj = self.client.db.tracked.find_one()
+        assert obj['consecutive_errors'] == 1
+
+        # we should have logged an error too
+        assert self.client.db.logs.find({'action': 'update',
+                                         'error': {'$ne': False}}).count() == 1
+
+        # update again
+        self.client.update(obj)
+
+        obj = self.client.db.tracked.find_one()
+        assert obj['consecutive_errors'] == 2

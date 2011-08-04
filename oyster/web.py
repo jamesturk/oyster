@@ -78,7 +78,7 @@ def show_doc(url, version):
         version = -1
     doc = client.get_version(url, version)
     resp = flask.make_response(doc.read())
-    resp.headers['content-type'] = doc.mimetype
+    resp.headers['content-type'] = doc.content_type
     return resp
 
 

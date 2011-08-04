@@ -105,7 +105,7 @@ class Client(object):
                                  doc['versioning'])
 
         if do_put:
-            self.fs.put(data, filename=doc['url'], mimetype=content_type,
+            self.fs.put(data, filename=doc['url'], content_type=content_type,
                         **doc['metadata'])
 
         # last_update/next_update are separate from question of versioning
