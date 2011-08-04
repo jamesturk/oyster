@@ -161,7 +161,7 @@ class ClientTests(TestCase):
         queue = self.client.get_update_queue()
         assert len(queue) == 1
 
-        # allow a second to pass
+        # wait for time to pass
         time.sleep(1)
 
         # queue should be full, but start with the un-updated one
@@ -169,3 +169,28 @@ class ClientTests(TestCase):
         assert len(queue) == 4
         assert queue[0]['_id'] == never['_id']
 
+
+    def test_get_update_queue_size(self):
+        self.client.track_url('a', update_mins=0.01)
+        self.client.track_url('b', update_mins=0.01)
+        self.client.track_url('c', update_mins=0.01)
+
+        a = self.client.db.tracked.find_one(dict(url='a'))
+        b = self.client.db.tracked.find_one(dict(url='b'))
+        c = self.client.db.tracked.find_one(dict(url='c'))
+
+        assert self.client.get_update_queue_size() == 3
+
+        self.client.update(a)
+
+        assert self.client.get_update_queue_size() == 2
+
+        self.client.update(b)
+        self.client.update(c)
+
+        assert self.client.get_update_queue_size() == 0
+
+        # wait
+        time.sleep(1)
+
+        assert self.client.get_update_queue_size() == 3

@@ -155,4 +155,7 @@ class Client(object):
 
 
     def get_update_queue_size(self):
-        return len(self.get_update_queue())
+        new = self.db.tracked.find({'next_update': {'$exists': False}}).count()
+        next = self.db.tracked.find({'next_update':
+                                 {'$lt': datetime.datetime.utcnow()}}).count()
+        return new+next
