@@ -11,7 +11,7 @@ from oyster.client import Client
 class ClientTests(TestCase):
 
     def setUp(self):
-        self.client = Client()
+        self.client = Client(mongo_db='oyster_test')
         self.client._wipe()
 
 
