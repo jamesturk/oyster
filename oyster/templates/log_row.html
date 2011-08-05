@@ -1,0 +1,7 @@
+
+    <tr{% if log.error %} class="error" {% endif %}>
+        <td>{{log.action}}</td>
+        <td><a href="/tracked/{{log.url}}">{{log.url}}</td>
+        <td>{{log.timestamp}}</td>
+        <td>{% if log.error %}{{log.error}}{% endif %}</td>
+    </tr>

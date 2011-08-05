@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block heading %}
+oyster
+{% endblock %}
+
+{% block body %}
+
+<div class="span-4">
+    <h2>Stats</h2>
+    <dl>
+        <dt>Queue Size</dt><dd>{{queue_size}}</dd>
+        <dt>Tracking</dt><dd>{{tracking}}</dd>
+        <dt>Need Update</dt><dd>{{need_update}}</dd>
+    </dl>
+</div>
+
+<div class="span-12 prepend-2 last">
+    <h2>Logs</h2>
+    <table>
+        <tr>
+            <th>action</th>
+            <th>description</th>
+            <th>timestamp</th>
+            <th>&nbsp;</th>
+        </tr>
+        {% for log in logs %}
+            {% include "log_row.html" %}
+        {% endfor %}
+    </table>
+</div>
+
+{% endblock %}

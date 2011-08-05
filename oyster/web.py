@@ -36,6 +36,18 @@ app = flask.Flask('oyster')
 client = Client()
 
 
+@app.route('/')
+@api_wrapper('index.html')
+def index():
+    status = {
+        'queue_size': app.work_queue.qsize(),
+        'tracking': client.db.tracked.count(),
+        'need_update': client.get_update_queue_size(),
+        'logs': client.db.logs.find().sort('$natural', -1).limit(20)
+    }
+    return status
+
+
 @app.route('/status/')
 @api_wrapper()
 def doc_list():
