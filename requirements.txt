@@ -2,3 +2,4 @@ scrapelib
 pymongo>=1.11
 flask
 nose
+celery
