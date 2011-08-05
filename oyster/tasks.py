@@ -6,8 +6,6 @@ from celery.execute import send_task
 from oyster.client import Client
 
 client = Client()
-client.db.status.drop()
-client.db.status.insert({'update_queue': 0})
 
 
 @task(ignore_result=True)
@@ -31,7 +29,7 @@ class UpdateTaskScheduler(PeriodicTask):
         # (currently the only way we avoid duplicates)
         # alternate option would be to set a _queued flag on documents
         if client.db.status.find_one()['update_queue']:
-            pass
+            return
 
         next_set = client.get_update_queue()
         for doc in next_set:

@@ -22,6 +22,11 @@ class Client(object):
                                       size=mongo_log_maxsize)
         except pymongo.errors.CollectionInvalid:
             pass
+
+        # create status document if it doesn't exist
+        if self.db.status.count() == 0:
+            self.db.status.insert({'update_queue': 0})
+
         self._collection_name = 'fs'
         self.fs = gridfs.GridFS(self.db, self._collection_name)
         self.scraper = scrapelib.Scraper(user_agent=user_agent,
@@ -40,6 +45,7 @@ class Client(object):
         self.db.drop_collection('%s.chunks' % self._collection_name)
         self.db.drop_collection('%s.files' % self._collection_name)
         self.db.drop_collection('logs')
+        self.db.drop_collection('status')
 
 
     def log(self, action, url, error=False, **kwargs):
