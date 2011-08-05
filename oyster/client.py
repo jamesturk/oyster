@@ -9,6 +9,23 @@ import gridfs
 import scrapelib
 
 
+def get_configured_client():
+    from oyster.conf import settings
+    return Client(mongo_host=settings.MONGO_HOST,
+                  mongo_port=settings.MONGO_PORT,
+                  mongo_db=settings.MONGO_DATABASE,
+                  mongo_log_maxsize=settings.MONGO_LOG_MAXSIZE,
+                  user_agent=settings.USER_AGENT,
+                  rpm=settings.REQUESTS_PER_MINUTE,
+                  timeout=settings.REQUEST_TIMEOUT,
+                  retry_attempts=settings.RETRY_ATTEMPTS,
+                  retry_wait_seconds=settings.RETRY_WAIT_SECONDS)
+
+
+
+
+
+
 class Client(object):
 
 

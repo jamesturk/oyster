@@ -1,21 +1,25 @@
-from celery.task import task
-from celery.task.base import PeriodicTask
-from celery.task.schedules import schedule
+from celery.task.base import Task, PeriodicTask
 from celery.execute import send_task
 
-from oyster.client import Client
-
-client = Client()
+from oyster.client import get_configured_client
 
 
-@task(ignore_result=True)
-def update_task(doc_id):
-    # maybe fetch doc instead?
-    doc = client.db.tracked.find_one({'_id': doc_id})
-    client.update(doc)
-    for hook in doc.get('post_update_hooks', []):
-        send_task(hook, (doc_id,))
-    client.db.status.update({}, {'$inc': {'update_queue': -1}})
+class UpdateTask(Task):
+    # results go straight to database
+    ignore_result = True
+
+    def __init__(self):
+        # one client per process
+        client = get_configured_client()
+
+
+    def run(self, doc_id):
+        # maybe fetch doc instead?
+        doc = client.db.tracked.find_one({'_id': doc_id})
+        client.update(doc)
+        for hook in doc.get('post_update_hooks', []):
+            send_task(hook, (doc_id,))
+        client.db.status.update({}, {'$inc': {'update_queue': -1}})
 
 
 class UpdateTaskScheduler(PeriodicTask):

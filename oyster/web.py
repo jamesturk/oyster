@@ -5,7 +5,7 @@ import functools
 import flask
 import pymongo.objectid
 
-from oyster.client import Client
+from oyster.client import get_configured_client
 
 
 class JSONEncoder(json.JSONEncoder):
@@ -33,14 +33,13 @@ def api_wrapper(template=None):
 
 
 app = flask.Flask('oyster')
-client = Client()
+client = get_configured_client()
 
 
 @app.route('/')
 @api_wrapper('index.html')
 def index():
     status = {
-        'queue_size': app.work_queue.qsize(),
         'tracking': client.db.tracked.count(),
         'need_update': client.get_update_queue_size(),
         'logs': client.db.logs.find().sort('$natural', -1).limit(20)
@@ -52,7 +51,6 @@ def index():
 @api_wrapper()
 def doc_list():
     status = {
-        'queue_size': app.work_queue.qsize(),
         'tracking': client.db.tracked.count(),
         'need_update': client.get_update_queue_size(),
     }
