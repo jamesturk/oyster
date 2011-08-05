@@ -12,14 +12,6 @@ Source is available via `GitHub <http://github.com/sunlightlabs/oyster/>`_
 
 ## ADD PyPI link after release
 
-TODO
-====
-
-* oysterweb
-    * dashboard
-    * document access
-* real testing of internals
-
 Installation
 ============
 
