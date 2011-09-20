@@ -29,7 +29,7 @@ class Client(object):
     def __init__(self, mongo_host='localhost', mongo_port=27017,
                  mongo_db='oyster', mongo_log_maxsize=100000000,
                  user_agent='oyster', rpm=600, timeout=None,
-                 retry_attempts=100, retry_wait_minutes=1/60.):
+                 retry_attempts=100, retry_wait_minutes=60):
 
         # set up a capped log if it doesn't exist
         self.db = pymongo.Connection(mongo_host, mongo_port)[mongo_db]
