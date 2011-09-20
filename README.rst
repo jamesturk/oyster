@@ -22,3 +22,8 @@ Requirements
 * mongodb 1.8
 * pymongo 1.11
 * scrapelib
+
+Usage
+=====
+
+* Run celeryd with beat ``celeryd -B``
