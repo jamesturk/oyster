@@ -21,11 +21,11 @@ Requirements
 * python 2.7
 * mongodb 1.8
 * pymongo 1.11
-* scrapelib
+* scrapelib 0.5.5
 
 Usage
 =====
 
 * Run celeryd with beat ``celeryd -B --config=oyster.celeryconfig``
 * Run oyster HTTP portal ``python oyster/web.py``
-
+* Use oyster.client.Client to add new documents & query the store
