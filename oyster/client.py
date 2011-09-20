@@ -49,11 +49,9 @@ class Client(object):
                                          requests_per_minute=rpm,
                                          follow_robots=False,
                                          raise_errors=True,
-                                         timeout=timeout,
-                                         # disable scrapelib's retries
-                                         retry_attempts=0,
-                                         retry_wait_seconds=0,
-                                        )
+                                         timeout=timeout)
+
+        self.retry_attempts = retry_attempts
         self.retry_wait_minutes = retry_wait_minutes
 
 
@@ -136,7 +134,10 @@ class Client(object):
         if error:
             c_errors = doc.get('consecutive_errors', 0)
             doc['consecutive_errors'] = c_errors + 1
-            update_mins = self.retry_wait_minutes * (2**c_errors)
+            if c_errors <= self.retry_attempts:
+                update_mins = self.retry_wait_minutes * (2**c_errors)
+            else:
+                update_mins = doc['update_mins']
         else:
             doc['consecutive_errors'] = 0
             update_mins = doc['update_mins']
