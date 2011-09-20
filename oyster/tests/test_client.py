@@ -11,23 +11,23 @@ from oyster.client import Client
 class ClientTests(TestCase):
 
     def setUp(self):
-        self.client = Client(mongo_db='oyster_test')
+        self.client = Client(mongo_db='oyster_test', retry_wait_minutes=1/60.)
         self.client._wipe()
 
 
     def test_constructor(self):
         c = Client('127.0.0.1', 27017, 'testdb', mongo_log_maxsize=5000,
                    user_agent='test-ua', rpm=30, timeout=60,
-                   retry_attempts=1, retry_wait_seconds=10)
+                   retry_attempts=7, retry_wait_minutes=8)
         assert c.db.connection.host == '127.0.0.1'
         assert c.db.connection.port == 27017
         assert c.db.logs.options()['capped'] == True
         assert c.db.logs.options()['size'] == 5000
+        assert c.retry_wait_minutes == 8
+        # TODO: test retry_attempts
         assert c.scraper.user_agent == 'test-ua'
         assert c.scraper.requests_per_minute == 30
         assert c.scraper.timeout == 60
-        assert c.scraper.retry_attempts == 1
-        assert c.scraper.retry_wait_seconds == 10
 
     def test_log(self):
         self.client.log('action1', 'http://example.com')

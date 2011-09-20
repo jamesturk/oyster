@@ -20,7 +20,7 @@ def get_configured_client():
                   rpm=settings.REQUESTS_PER_MINUTE,
                   timeout=settings.REQUEST_TIMEOUT,
                   retry_attempts=settings.RETRY_ATTEMPTS,
-                  retry_wait_seconds=settings.RETRY_WAIT_SECONDS)
+                  retry_wait_minutes=settings.RETRY_WAIT_MINUTES)
 
 
 class Client(object):
@@ -29,7 +29,7 @@ class Client(object):
     def __init__(self, mongo_host='localhost', mongo_port=27017,
                  mongo_db='oyster', mongo_log_maxsize=100000000,
                  user_agent='oyster', rpm=600, timeout=None,
-                 retry_attempts=0, retry_wait_seconds=5):
+                 retry_attempts=100, retry_wait_minutes=1/60.):
 
         # set up a capped log if it doesn't exist
         self.db = pymongo.Connection(mongo_host, mongo_port)[mongo_db]
@@ -50,9 +50,11 @@ class Client(object):
                                          follow_robots=False,
                                          raise_errors=True,
                                          timeout=timeout,
-                                         retry_attempts=retry_attempts,
-                                         retry_wait_seconds=retry_wait_seconds
+                                         # disable scrapelib's retries
+                                         retry_attempts=0,
+                                         retry_wait_seconds=0,
                                         )
+        self.retry_wait_minutes = retry_wait_minutes
 
 
     def _wipe(self):
@@ -131,14 +133,18 @@ class Client(object):
             self.fs.put(data, filename=doc['url'], content_type=content_type,
                         **doc['metadata'])
 
+        if error:
+            c_errors = doc.get('consecutive_errors', 0)
+            doc['consecutive_errors'] = c_errors + 1
+            update_mins = self.retry_wait_minutes * (2**c_errors)
+        else:
+            doc['consecutive_errors'] = 0
+            update_mins = doc['update_mins']
+
         # last_update/next_update are separate from question of versioning
         doc['last_update'] = datetime.datetime.utcnow()
         doc['next_update'] = (doc['last_update'] +
-                              datetime.timedelta(minutes=doc['update_mins']))
-        if error:
-            doc['consecutive_errors'] = doc.get('consecutive_errors', 0) + 1
-        else:
-            doc['consecutive_errors'] = 0
+                              datetime.timedelta(minutes=update_mins))
 
         self.log('update', url=url, new_doc=do_put, error=error)
 

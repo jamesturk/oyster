@@ -27,10 +27,7 @@ class UpdateTaskScheduler(PeriodicTask):
 
     # 60s tick
     run_every = 60
-
-    def __init__(self):
-        self.client = get_configured_client()
-
+    client = get_configured_client()
 
     def run(self):
         # if the update queue isn't empty, wait to add more
@@ -41,5 +38,5 @@ class UpdateTaskScheduler(PeriodicTask):
 
         next_set = self.client.get_update_queue()
         for doc in next_set:
-            update_task.delay(doc['_id'])
+            UpdateTask.delay(doc['_id'])
             self.client.db.status.update({}, {'$inc': {'update_queue': 1}})
