@@ -10,6 +10,7 @@ import scrapelib
 
 
 def get_configured_client():
+    """ helper factory, gets a client configured with oyster.conf.settings """
     from oyster.conf import settings
     return Client(mongo_host=settings.MONGO_HOST,
                   mongo_port=settings.MONGO_PORT,
@@ -22,17 +23,15 @@ def get_configured_client():
                   retry_wait_seconds=settings.RETRY_WAIT_SECONDS)
 
 
-
-
-
-
 class Client(object):
-
+    """ oyster's workhorse, handles tracking """
 
     def __init__(self, mongo_host='localhost', mongo_port=27017,
                  mongo_db='oyster', mongo_log_maxsize=100000000,
                  user_agent='oyster', rpm=600, timeout=None,
                  retry_attempts=0, retry_wait_seconds=5):
+
+        # set up a capped log if it doesn't exist
         self.db = pymongo.Connection(mongo_host, mongo_port)[mongo_db]
         try:
             self.db.create_collection('logs', capped=True,
@@ -66,6 +65,7 @@ class Client(object):
 
 
     def log(self, action, url, error=False, **kwargs):
+        """ add an entry to the oyster log """
         kwargs['action'] = action
         kwargs['url'] = url
         kwargs['error'] = error

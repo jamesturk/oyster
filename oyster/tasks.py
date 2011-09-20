@@ -5,6 +5,7 @@ from oyster.client import get_configured_client
 
 
 class UpdateTask(Task):
+    """ task that updates documents """
     # results go straight to database
     ignore_result = True
 
@@ -14,7 +15,6 @@ class UpdateTask(Task):
 
 
     def run(self, doc_id):
-        # maybe fetch doc instead?
         doc = self.client.db.tracked.find_one({'_id': doc_id})
         self.client.update(doc)
         for hook in doc.get('post_update_hooks', []):
@@ -23,6 +23,7 @@ class UpdateTask(Task):
 
 
 class UpdateTaskScheduler(PeriodicTask):
+    """ recurring task that populates the update queue """
 
     # 60s tick
     run_every = 60

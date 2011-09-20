@@ -26,4 +26,6 @@ Requirements
 Usage
 =====
 
-* Run celeryd with beat ``celeryd -B``
+* Run celeryd with beat ``celeryd -B --config=oyster.celeryconfig``
+* Run oyster HTTP portal ``python oyster/web.py``
+
