@@ -4,7 +4,7 @@ oyster
 
 oyster is a service for tracking regularly-accessed pages, a sort of proactive cache.
 
-It features a daemon, a command line client for interacting with the tracking list, and a web frontend for viewing the status.
+Oyster intends to provide a command line client for interacting with the list of tracked documents and web frontend for viewing the status and retrieving data.  Behind the scenes it uses a celery queue to manage the documents it is tasked with keeping up to date.
 
 oyster was created by James Turk for `Sunlight Labs <http://sunlightlabs.com>`_.
 
