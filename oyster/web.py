@@ -17,6 +17,12 @@ class JSONEncoder(json.JSONEncoder):
         else:
             return super(JSONEncoder, self).default(obj)
 
+def _path_fixer(url):
+    """ this exists because werkzeug seems to collapse // into / sometimes
+        certainly a hack, but given that werkzeug seems to only do the mangling
+        *sometimes* being a bit aggressive was the only viable option
+    """
+    return re.sub(r'(http|https|ftp):/([^/])', r'\1://\2', url)
 
 def api_wrapper(template=None):
     def wrapper(func):
@@ -78,12 +84,14 @@ def tracked():
 
 @app.route('/tracked/<path:url>')
 def tracked_view(url):
+    url = _path_fixer(url)
     doc = client.db.tracked.find_one({'url': url})
     return json.dumps(doc, cls=JSONEncoder)
 
 
 @app.route('/doc/<path:url>/<version>')
 def show_doc(url, version):
+    url = _path_fixer(url)
     if version == 'latest':
         version = -1
     doc = client.get_version(url, version)
