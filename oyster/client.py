@@ -28,8 +28,8 @@ class Client(object):
 
     def __init__(self, mongo_host='localhost', mongo_port=27017,
                  mongo_db='oyster', mongo_log_maxsize=100000000,
-                 user_agent='oyster', rpm=600, timeout=None,
-                 retry_attempts=100, retry_wait_minutes=60):
+                 user_agent='oyster', rpm=60, timeout=300,
+                 retry_attempts=3, retry_wait_minutes=60):
 
         # set up a capped log if it doesn't exist
         self.db = pymongo.Connection(mongo_host, mongo_port)[mongo_db]
@@ -86,10 +86,10 @@ class Client(object):
             raise ValueError('%s is already tracked' % url)
 
         self.log('track', url=url)
-        self.db.tracked.insert(dict(url=url, versioning=versioning,
-                                    update_mins=update_mins,
-                                    _random=random.randint(0, sys.maxint),
-                                    metadata=kwargs))
+        return self.db.tracked.insert(dict(url=url, versioning=versioning,
+                                       update_mins=update_mins,
+                                       _random=random.randint(0, sys.maxint),
+                                       metadata=kwargs))
 
 
     def md5_versioning(self, doc, data):
