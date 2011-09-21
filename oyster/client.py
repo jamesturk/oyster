@@ -43,6 +43,9 @@ class Client(object):
         if self.db.status.count() == 0:
             self.db.status.insert({'update_queue': 0})
 
+        # ensure an index on _random
+        self.db.tracked.ensure_index([('_random', pymongo.ASCENDING)])
+
         self._collection_name = 'fs'
         self.fs = gridfs.GridFS(self.db, self._collection_name)
         self.scraper = scrapelib.Scraper(user_agent=user_agent,
