@@ -6,6 +6,7 @@ import functools
 import flask
 import pymongo.objectid
 
+from oyster.conf import settings
 from oyster.client import get_configured_client
 
 
@@ -50,6 +51,7 @@ def index():
         'tracking': client.db.tracked.count(),
         'need_update': client.get_update_queue_size(),
         'logs': client.db.logs.find().sort('$natural', -1).limit(20)
+        'mongo_host': settings.MONGO_HOST,
     }
     return status
 
