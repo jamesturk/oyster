@@ -10,10 +10,12 @@ oyster was created by James Turk for `Sunlight Labs <http://sunlightlabs.com>`_.
 
 Source is available via `GitHub <http://github.com/sunlightlabs/oyster/>`_
 
-## ADD PyPI link after release
-
 Installation
 ============
+
+oyster is available on PyPI: `oyster <http://pypi.python.org/pypi/oyster>`_.
+
+The recommended way to install oyster is to simply ``pip install oyster``
 
 Requirements
 ------------
