@@ -85,9 +85,10 @@ def tracked():
     return json.dumps(tracked, cls=JSONEncoder)
 
 
-@app.route('/tracked/<id>')
-def tracked_view(id):
-    doc = client.db.tracked.find_one({'_id': id})
+@app.route('/tracked/<path:url>')
+def tracked_view(url):
+    url = _path_fixer(url)
+    doc = client.db.tracked.find_one({'url': url})
     return json.dumps(doc, cls=JSONEncoder)
 
 
