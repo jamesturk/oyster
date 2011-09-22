@@ -8,14 +8,14 @@ Oyster Logs
 
 <div class="span-2">
 {% if offset %}
-<a class="button" href="/log/?offset={{prev_offset}}">&laquo; Prev</a>
+<a class="button" href="{{request.script_root}}/log/?offset={{prev_offset}}">&laquo; Prev</a>
 {% endif %}
 &nbsp;
 </div>
 
 <div class="span-2 prepend-14 last">
 {% if next_offset %}
-<a class="button" href="/log/?offset={{next_offset}}">Next &raquo;</a>
+<a class="button" href="{{request.script_root}}/log/?offset={{next_offset}}">Next &raquo;</a>
 {% endif %}
 </div>
 

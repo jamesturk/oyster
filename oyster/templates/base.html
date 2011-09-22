@@ -2,11 +2,11 @@
 <html>
     <head>
         <title>{% block title %} {% endblock %} </title>
-        <link rel="stylesheet" href="static/blueprint/screen.css" type="text/css" media="screen, projection">
-        <link rel="stylesheet" href="static/blueprint/print.css" type="text/css" media="print">
+        <link rel="stylesheet" href="{{request.script_root}}/static/blueprint/screen.css" type="text/css" media="screen, projection">
+        <link rel="stylesheet" href="{{request.script_root}}/static/blueprint/print.css" type="text/css" media="print">
         <!--[if lt IE 8]>
-          <link rel="stylesheet" href="css/blueprint/ie.css" type="text/css" media="screen, projection">
-          <![endif]-->
+          <link rel="stylesheet" href="{request.script_root}}/css/blueprint/ie.css" type="text/css" media="screen, projection">
+        <![endif]-->
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
         <style type="text/css">
             body { font-family: sans-serif; }
