@@ -87,7 +87,7 @@ def tracked():
 
 @app.route('/tracked/<id>')
 def tracked_view(id):
-    doc = client.db.tracked.find_one({'_id': pymongo.objectid.ObjectId(id)})
+    doc = client.db.tracked.find_one({'_id': id})
     return json.dumps(doc, cls=JSONEncoder)
 
 
