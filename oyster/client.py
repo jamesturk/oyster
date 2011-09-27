@@ -171,21 +171,18 @@ class Client(object):
         return self.fs.get_version(url, n)
 
 
-    def get_update_queue(self, limit=5000):
+    def get_update_queue(self):
         # results are always sorted by random to avoid piling on single server
 
         # first we try to update anything that we've never retrieved
         new = self.db.tracked.find({'next_update':
                                     {'$exists': False}}).sort('_random')
-        queue = list(new.limit(limit))
-
-        # shorten limit by number returned
-        limit -= len(queue)
+        queue = list(new)
 
         # pull the rest from those for which next_update is in the past
         next = self.db.tracked.find({'next_update':
              {'$lt': datetime.datetime.utcnow()}}).sort('_random')
-        queue.extend(next.limit(limit))
+        queue.extend(next)
 
         return queue
 
