@@ -29,6 +29,7 @@ class ClientTests(TestCase):
         assert c.scraper.requests_per_minute == 30
         assert c.scraper.timeout == 60
 
+
     def test_log(self):
         self.client.log('action1', 'http://example.com')
         self.client.log('action2', 'http://test.com', error=True, pi=3)
@@ -138,36 +139,30 @@ class ClientTests(TestCase):
 
     def test_get_update_queue(self):
         self.client.track_url('never-updates', update_mins=0.01)
-        self.client.track_url('fake-1', update_mins=0.01)
-        self.client.track_url('fake-2', update_mins=0.01)
-        self.client.track_url('fake-3', update_mins=0.01)
+        self.client.track_url('bad-uri', update_mins=0.01)
+        self.client.track_url('http://example.com', update_mins=0.01)
 
         never = self.client.db.tracked.find_one(dict(url='never-updates'))
-        fake1 = self.client.db.tracked.find_one(dict(url='fake-1'))
-        fake2 = self.client.db.tracked.find_one(dict(url='fake-2'))
-        fake3 = self.client.db.tracked.find_one(dict(url='fake-3'))
+        bad = self.client.db.tracked.find_one(dict(url='bad-uri'))
+        good = self.client.db.tracked.find_one(dict(url='http://example.com'))
 
-        # 4 in queue, ordered by random
+        # 3 in queue, ordered by random
         queue = self.client.get_update_queue()
-        assert len(queue) == 4
+        assert len(queue) == 3
         assert queue[0]['_random'] < queue[1]['_random'] < queue[2]['_random']
 
-        # update a few
-        self.client.update(fake1)
-        self.client.update(fake2)
-        self.client.update(fake3)
+        # try and update bad & good
+        self.client.update(bad)
+        self.client.update(good)
 
         # queue should only have never in it
         queue = self.client.get_update_queue()
-        assert len(queue) == 1
-
-        # wait for time to pass
-        time.sleep(1)
-
-        # queue should be full, but start with the un-updated one
-        queue = self.client.get_update_queue()
-        assert len(queue) == 4
         assert queue[0]['_id'] == never['_id']
+
+        # wait for time to pass so queue should be full
+        time.sleep(1)
+        queue = self.client.get_update_queue()
+        assert len(queue) == 3
 
 
     def test_get_update_queue_size(self):
@@ -179,18 +174,13 @@ class ClientTests(TestCase):
         b = self.client.db.tracked.find_one(dict(url='b'))
         c = self.client.db.tracked.find_one(dict(url='c'))
 
+        # size should start at 3
         assert self.client.get_update_queue_size() == 3
 
+        # goes down one
         self.client.update(a)
-
         assert self.client.get_update_queue_size() == 2
 
-        self.client.update(b)
-        self.client.update(c)
-
-        assert self.client.get_update_queue_size() == 0
-
-        # wait
+        # wait for it to go back to 3
         time.sleep(1)
-
         assert self.client.get_update_queue_size() == 3
