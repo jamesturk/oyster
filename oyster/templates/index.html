@@ -5,13 +5,44 @@ oyster
 {% endblock %}
 
 {% block body %}
+<script type="text/javascript">
+    var REFRESH = 5000;
+    var MAX_ROWS = 100;
+    setInterval(function() {
+        jQuery.getJSON('/?json', function(data) {
+            jQuery('#tracking_val').text(data.tracking);
+            jQuery('#need_update_val').text(data.need_update);
+            var latest_link = jQuery('tr td a')[0]['href'].split('/tracked/')[1];
+            var new_rows = ''
+            for(var i=0; i < data.logs.length; ++i) {
+                if(latest_link == data.logs[i].url) {
+                    break;
+                }
+                if(data.logs[i].error) { 
+                    new_rows += '<tr class="error">'
+                } else {
+                    new_rows += '<tr>';
+                }
+                new_rows += '<td>' + data.logs[i].action + '</td>\n';
+                new_rows += '<td><a href="{{request.script_root}}/tracked/' + data.logs[i].url + '">' + data.logs[i].url + '</td>';
+                new_rows += '<td>' + data.logs[i].timestamp + '</td>';
+                if(data.logs[i].error) { 
+                    new_rows += '<td>' + data.logs[i].error + '</td></tr>';
+                } else {
+                    new_rows += '<td></td></tr>';
+                }
+            }
+            jQuery('tr:first').after(new_rows);
+            jQuery('tr:gt(' + MAX_ROWS + ')').empty()
+        });
+    }, REFRESH);
+</script>
 
 <div class="span-4">
     <h2>Stats</h2>
     <dl>
-        <dt>Queue Size</dt><dd>{{queue_size}}</dd>
-        <dt>Tracking</dt><dd>{{tracking}}</dd>
-        <dt>Need Update</dt><dd>{{need_update}}</dd>
+        <dt>Tracking</dt><dd id="tracking_val">{{tracking}}</dd>
+        <dt>Need Update</dt><dd id="need_update_val">{{need_update}}</dd>
         <dt>Mongo Host</dt><dd>{{mongo_host}}</dd>
     </dl>
 </div>

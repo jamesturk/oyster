@@ -19,12 +19,14 @@ class JSONEncoder(json.JSONEncoder):
         else:
             return super(JSONEncoder, self).default(obj)
 
+
 def _path_fixer(url):
     """ this exists because werkzeug seems to collapse // into / sometimes
         certainly a hack, but given that werkzeug seems to only do the mangling
         *sometimes* being a bit aggressive was the only viable option
     """
     return re.sub(r'(http|https|ftp):/([^/])', r'\1://\2', url)
+
 
 def api_wrapper(template=None):
     def wrapper(func):
@@ -50,7 +52,7 @@ def index():
     status = {
         'tracking': client.db.tracked.count(),
         'need_update': client.get_update_queue_size(),
-        'logs': client.db.logs.find().sort('$natural', -1).limit(20),
+        'logs': list(client.db.logs.find().sort('$natural', -1).limit(20)),
         'mongo_host': settings.MONGO_HOST,
     }
     return status
