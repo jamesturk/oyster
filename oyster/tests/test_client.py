@@ -42,7 +42,7 @@ class ClientTests(TestCase):
 
     def test_track_url(self):
         # basic insert
-        self.client.track_url('http://example.com', update_mins=30, pi=3)
+        id1 = self.client.track_url('http://example.com', update_mins=30, pi=3)
         obj = self.client.db.tracked.find_one()
         assert '_random' in obj
         assert obj['update_mins'] == 30
@@ -53,11 +53,15 @@ class ClientTests(TestCase):
         assert log['action'] == 'track'
         assert log['url'] == 'http://example.com'
 
-        # can't track same URL twice
+        # track same url again with same metadata returns id
+        id2 = self.client.track_url('http://example.com', update_mins=30, pi=3)
+        assert id1 == id2
+
+        # can't track same URL twice with different metadata
         assert_raises(ValueError, self.client.track_url, 'http://example.com')
 
         # logged error
-        assert self.client.db.logs.find_one({'error': 'already tracked'})
+        assert self.client.db.logs.find_one({'error': 'tracking conflict'})
 
 
     def test_md5_versioning(self):

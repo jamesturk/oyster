@@ -84,9 +84,19 @@ class Client(object):
         url
             URL to start tracking
         """
-        if self.db.tracked.find_one({'url': url}):
-            self.log('track', url=url, error='already tracked')
-            raise ValueError('%s is already tracked' % url)
+        tracked = self.db.tracked.find_one({'url': url})
+
+        # if data is already tracked and this is just a duplicate call
+        # return the original object
+        if tracked:
+            if (tracked['metadata'] == kwargs and
+                tracked['versioning'] == versioning and
+                tracked['update_mins'] == update_mins):
+                return tracked['_id']
+            else:
+                self.log('track', url=url, error='tracking conflict')
+                raise ValueError('%s is already tracked with different '
+                                 'metadata' % url)
 
         self.log('track', url=url)
         return self.db.tracked.insert(dict(url=url, versioning=versioning,
