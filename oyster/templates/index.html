@@ -9,7 +9,7 @@ oyster
     var REFRESH = 5000;
     var MAX_ROWS = 100;
     setInterval(function() {
-        jQuery.getJSON('/?json', function(data) {
+        jQuery.getJSON('{{request.script_root}}/?json', function(data) {
             jQuery('#tracking_val').text(data.tracking);
             jQuery('#need_update_val').text(data.need_update);
             var latest_link = jQuery('tr td a')[0]['href'].split('/tracked/')[1];
