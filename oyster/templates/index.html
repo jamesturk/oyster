@@ -6,7 +6,7 @@ oyster
 
 {% block body %}
 <script type="text/javascript">
-    var REFRESH = 5000;
+    var REFRESH = 2000;
     var MAX_ROWS = 100;
     setInterval(function() {
         jQuery.getJSON('{{request.script_root}}/?json', function(data) {
