@@ -1,6 +1,6 @@
 from oyster.conf import settings
 
-CELERY_IMPORTS = ("oyster.tasks",)
+CELERY_IMPORTS = ["oyster.tasks"] + list(settings.CELERY_TASK_MODULES)
 
 BROKER_TRANSPORT = 'mongodb'
 BROKER_HOST = settings.MONGO_HOST
