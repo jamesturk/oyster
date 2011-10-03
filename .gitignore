@@ -1,2 +1,3 @@
 celerybeat-schedule
+oyster_settings.py
 *.pyc
