@@ -67,7 +67,7 @@ class ExternalStoreTask(Task):
     def run(self, doc_id):
         # get the document
         doc = self.client.db.tracked.find_one({'_id': ObjectId(doc_id)})
-        filedata = self.client.get_version(doc['url'])
+        filedata = self.client.get_version(doc['url']).read()
 
         # put the document into the data store
         result = self.upload_document(doc_id, filedata, doc['metadata'])
@@ -92,7 +92,7 @@ class S3StoreTask(ExternalStoreTask):
         bucket = self.s3conn.create_bucket(settings.AWS_BUCKET)
         k = self.boto.s3.Key(bucket)
         k.key = doc_id
-        k.set_contents_from_string(filedata.read())
+        k.set_contents_from_string(filedata)
         k.set_acl('public-read')
 
         url = 'http://%s.s3.amazonaws.com/%s' % (settings.AWS_BUCKET, doc_id)
