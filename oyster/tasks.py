@@ -68,7 +68,7 @@ class ExternalStoreTask(Task):
         # get the document
         doc = self.client.db.tracked.find_one({'_id': ObjectId(doc_id)})
         filedata = self.client.get_version(doc['url']).read()
-        text = extract_text(filedata)
+        text = extract_text(filedata, doc['metadata'])
 
         # put the document into the data store
         result = self.upload_document(doc_id, text, doc['metadata'])
