@@ -64,13 +64,14 @@ class ExternalStoreTask(Task):
         # one client per process
         self.client = get_configured_client()
 
-    def run(self, doc_id):
+    def run(self, doc_id, extract_text=lambda x: x):
         # get the document
         doc = self.client.db.tracked.find_one({'_id': ObjectId(doc_id)})
         filedata = self.client.get_version(doc['url']).read()
+        text = extract_text(filedata)
 
         # put the document into the data store
-        result = self.upload_document(doc_id, filedata, doc['metadata'])
+        result = self.upload_document(doc_id, extract_text, doc['metadata'])
 
         doc[self.external_store + '_id'] = result
         self.client.db.tracked.save(doc, safe=True)
