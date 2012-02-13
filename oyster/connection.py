@@ -122,8 +122,8 @@ class Connection(object):
         # update strategies could be implemented here as well
         try:
             url = doc['url'].replace(' ', '%20')
-            data = self.scraper.urlopen(url)
-            content_type = data.response.headers['content-type']
+            newdata = self.scraper.urlopen(url)
+            content_type = newdata.response.headers['content-type']
         except Exception as e:
             do_put = False
             error = str(e)
@@ -135,14 +135,14 @@ class Connection(object):
 
         if do_put:
             if doc['versioning'] == 'md5':
-                do_put = self.md5_versioning(doc, data)
+                do_put = self.md5_versioning(doc, newdata)
             else:
                 raise ValueError('unknown versioning strategy "%s"' %
                                  doc['versioning'])
 
         if do_put:
-            self.fs.put(data, filename=doc['url'], content_type=content_type,
-                        **doc['metadata'])
+            self.fs.put(newdata, filename=doc['url'],
+                        content_type=content_type, **doc['metadata'])
 
         if error:
             c_errors = doc.get('consecutive_errors', 0)
