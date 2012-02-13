@@ -36,7 +36,7 @@ class UpdateTaskScheduler(PeriodicTask):
         next_set = kernel.get_update_queue()
         for doc in next_set:
             UpdateTask.delay(doc['_id'])
-            kernel.status.update({}, {'$inc': {'update_queue': 1}})
+            kernel.db.status.update({}, {'$inc': {'update_queue': 1}})
 
 
 class ExternalStoreTask(Task):
