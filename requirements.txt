@@ -1,5 +1,5 @@
 scrapelib
-pymongo>=1.11
+pymongo>=2.0
 flask
 nose
 celery

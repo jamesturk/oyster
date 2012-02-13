@@ -21,9 +21,9 @@ Requirements
 ------------
 
 * python 2.7
-* mongodb 1.8
-* pymongo 1.11
-* scrapelib 0.5.5
+* mongodb 2.0
+* pymongo 2.0
+* scrapelib 0.5+
 
 Usage
 =====
