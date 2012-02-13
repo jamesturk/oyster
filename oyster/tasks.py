@@ -4,7 +4,7 @@ from celery.execute import send_task
 from pymongo.objectid import ObjectId
 
 from oyster.conf import settings
-from oyster.connection import get_configured_connection
+from oyster.core import kernel
 
 
 class UpdateTask(Task):
@@ -12,17 +12,12 @@ class UpdateTask(Task):
     # results go straight to database
     ignore_result = True
 
-    def __init__(self):
-        # one connection per process
-        self.conn = get_configured_connection()
-
-
     def run(self, doc_id):
-        doc = self.conn.db.tracked.find_one({'_id': doc_id})
-        self.conn.update(doc)
+        doc = kernel.db.tracked.find_one({'_id': doc_id})
+        kernel.update(doc)
         for hook in doc.get('post_update_hooks', []):
             send_task(hook, (doc_id,))
-        self.conn.db.status.update({}, {'$inc': {'update_queue': -1}})
+        kernel.db.status.update({}, {'$inc': {'update_queue': -1}})
 
 
 class UpdateTaskScheduler(PeriodicTask):
@@ -30,19 +25,18 @@ class UpdateTaskScheduler(PeriodicTask):
 
     # 60s tick
     run_every = 60
-    conn = get_configured_connection()
 
     def run(self):
         # if the update queue isn't empty, wait to add more
         # (currently the only way we avoid duplicates)
         # alternate option would be to set a _queued flag on documents
-        if self.conn.db.status.find_one()['update_queue']:
+        if kernel.db.status.find_one()['update_queue']:
             return
 
-        next_set = self.conn.get_update_queue()
+        next_set = kernel.get_update_queue()
         for doc in next_set:
             UpdateTask.delay(doc['_id'])
-            self.conn.db.status.update({}, {'$inc': {'update_queue': 1}})
+            kernel.status.update({}, {'$inc': {'update_queue': 1}})
 
 
 class ExternalStoreTask(Task):
@@ -60,21 +54,17 @@ class ExternalStoreTask(Task):
     # used as a base class
     abstract = True
 
-    def __init__(self):
-        # one connection per process
-        self.conn = get_configured_connection()
-
     def run(self, doc_id, extract_text=lambda x: x):
         # get the document
-        doc = self.conn.db.tracked.find_one({'_id': ObjectId(doc_id)})
-        filedata = self.conn.get_version(doc['url']).read()
+        doc = kernel.db.tracked.find_one({'_id': ObjectId(doc_id)})
+        filedata = kernel.get_version(doc['url']).read()
         text = extract_text(filedata, doc['metadata'])
 
         # put the document into the data store
         result = self.upload_document(doc_id, text, doc['metadata'])
 
         doc[self.external_store + '_id'] = result
-        self.conn.db.tracked.save(doc, safe=True)
+        kernel.db.tracked.save(doc, safe=True)
 
 
     def upload_document(self, doc_id, filedata, metadata):

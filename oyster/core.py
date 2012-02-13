@@ -9,27 +9,16 @@ import gridfs
 import scrapelib
 
 
-def get_configured_connection():
-    """ factory, gets a connection configured with oyster.conf.settings """
-    from oyster.conf import settings
-    return Connection(mongo_host=settings.MONGO_HOST,
-                      mongo_port=settings.MONGO_PORT,
-                      mongo_db=settings.MONGO_DATABASE,
-                      mongo_log_maxsize=settings.MONGO_LOG_MAXSIZE,
-                      user_agent=settings.USER_AGENT,
-                      rpm=settings.REQUESTS_PER_MINUTE,
-                      timeout=settings.REQUEST_TIMEOUT,
-                      retry_attempts=settings.RETRY_ATTEMPTS,
-                      retry_wait_minutes=settings.RETRY_WAIT_MINUTES)
-
-
-class Connection(object):
+class Kernel(object):
     """ oyster's workhorse, handles tracking """
 
     def __init__(self, mongo_host='localhost', mongo_port=27017,
                  mongo_db='oyster', mongo_log_maxsize=100000000,
                  user_agent='oyster', rpm=60, timeout=300,
                  retry_attempts=3, retry_wait_minutes=60):
+        """
+        configurable for ease of testing, only one should be instantiated
+        """
 
         # set up a capped log if it doesn't exist
         self.db = pymongo.Connection(mongo_host, mongo_port)[mongo_db]
@@ -83,6 +72,12 @@ class Connection(object):
 
         url
             URL to start tracking
+        versioning
+            currently only valid value is "md5"
+        update_mins
+            minutes between automatic updates, default is 1440 (1 day)
+        **kwargs
+            any keyword args will be added to the document's metadata
         """
         tracked = self.db.tracked.find_one({'url': url})
 
@@ -116,6 +111,18 @@ class Connection(object):
 
 
     def update(self, doc):
+        """
+        perform update upon a given document
+
+        :param:`doc` must be a document from the `tracked` collection
+
+        * download latest document
+        * check if document has changed using versioning func
+        * if a change has occurred save the file to GridFS
+        * if error occured, log & keep track of how many errors in a row
+        * update last_update/next_update timestamp
+        """
+
         do_put = True
         error = False
 
@@ -166,6 +173,9 @@ class Connection(object):
 
 
     def get_all_versions(self, url):
+        """
+        get all versions stored for a given URL
+        """
         versions = []
         n = 0
         while True:
@@ -178,10 +188,23 @@ class Connection(object):
 
 
     def get_version(self, url, n=-1):
+        """
+        get a specific version of a file
+
+        defaults to getting latest version
+        """
         return self.fs.get_version(url, n)
 
 
     def get_update_queue(self):
+        """
+        Get a list of what needs to be updated.
+
+        Documents that have never been updated take priority, followed by
+        documents that are simply stale.  Within these two categories results
+        are sorted in semirandom order to decrease odds of piling on one
+        server.
+        """
         # results are always sorted by random to avoid piling on single server
 
         # first we try to update anything that we've never retrieved
@@ -198,7 +221,28 @@ class Connection(object):
 
 
     def get_update_queue_size(self):
+        """
+        Get the size of the update queue, this should match
+        ``len(self.get_update_queue())``, but is computed more efficiently.
+        """
         new = self.db.tracked.find({'next_update': {'$exists': False}}).count()
         next = self.db.tracked.find({'next_update':
                                  {'$lt': datetime.datetime.utcnow()}}).count()
         return new+next
+
+
+
+def _get_configured_kernel():
+    """ factory, gets a connection configured with oyster.conf.settings """
+    from oyster.conf import settings
+    return Kernel(mongo_host=settings.MONGO_HOST,
+                  mongo_port=settings.MONGO_PORT,
+                  mongo_db=settings.MONGO_DATABASE,
+                  mongo_log_maxsize=settings.MONGO_LOG_MAXSIZE,
+                  user_agent=settings.USER_AGENT,
+                  rpm=settings.REQUESTS_PER_MINUTE,
+                  timeout=settings.REQUEST_TIMEOUT,
+                  retry_attempts=settings.RETRY_ATTEMPTS,
+                  retry_wait_minutes=settings.RETRY_WAIT_MINUTES)
+
+kernel = _get_configured_kernel()

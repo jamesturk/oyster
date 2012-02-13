@@ -7,7 +7,7 @@ import flask
 import pymongo.objectid
 
 from oyster.conf import settings
-from oyster.connection import get_configured_connection
+from oyster.core import kernel
 
 
 class JSONEncoder(json.JSONEncoder):
@@ -43,16 +43,14 @@ def api_wrapper(template=None):
 
 
 app = flask.Flask('oyster')
-conn = get_configured_connection()
-
 
 @app.route('/')
 @api_wrapper('index.html')
 def index():
     status = {
-        'tracking': conn.db.tracked.count(),
-        'need_update': conn.get_update_queue_size(),
-        'logs': list(conn.db.logs.find().sort('$natural', -1).limit(20)),
+        'tracking': kernel.db.tracked.count(),
+        'need_update': kernel.get_update_queue_size(),
+        'logs': list(kernel.db.logs.find().sort('$natural', -1).limit(20)),
         'mongo_host': settings.MONGO_HOST,
     }
     return status
@@ -62,8 +60,8 @@ def index():
 @api_wrapper()
 def doc_list():
     status = {
-        'tracking': conn.db.tracked.count(),
-        'need_update': conn.get_update_queue_size(),
+        'tracking': kernel.db.tracked.count(),
+        'need_update': kernel.get_update_queue_size(),
     }
     return status
 
@@ -75,7 +73,7 @@ def log_view():
     size = 100
     prev_offset = max(offset - size, 0)
     next_offset = offset + size
-    logs = conn.db.logs.find().sort('$natural', -1).skip(offset).limit(size)
+    logs = kernel.db.logs.find().sort('$natural', -1).skip(offset).limit(size)
     return dict(logs=list(logs), prev_offset=prev_offset,
                 next_offset=next_offset, offset=offset)
 
@@ -83,14 +81,14 @@ def log_view():
 @app.route('/tracked/')
 @api_wrapper()
 def tracked():
-    tracked = list(conn.db.tracked.find())
+    tracked = list(kernel.db.tracked.find())
     return json.dumps(tracked, cls=JSONEncoder)
 
 
 @app.route('/tracked/<path:url>')
 def tracked_view(url):
     url = _path_fixer(url)
-    doc = conn.db.tracked.find_one({'url': url})
+    doc = kernel.db.tracked.find_one({'url': url})
     return json.dumps(doc, cls=JSONEncoder)
 
 
@@ -99,7 +97,7 @@ def show_doc(url, version):
     url = _path_fixer(url)
     if version == 'latest':
         version = -1
-    doc = conn.get_version(url, version)
+    doc = kernel.get_version(url, version)
     resp = flask.make_response(doc.read())
     resp.headers['content-type'] = doc.content_type
     return resp
