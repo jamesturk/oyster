@@ -1,0 +1,31 @@
+Oyster is designed as a 'proactive document cache', meaning that it takes URLs
+and keeps a local copy up to date depending on user-specified criteria.
+
+Data Model
+==========
+
+Oyster keeps its data in a MongoDB instance and makes use of GridFS to store the
+raw document data.
+
+In addition to the standard gridfs collections (fs.chunks, fs.files) oyster
+uses the following collections:
+
+tracked - metadata for tracked resources
+    _id         : internal id
+    _random     : a random integer used for sorting
+    url         : url of resource
+    versioning  : string indicating type of versioning to be used for this
+                  resource.  currently set to md5 for all documents
+    update_mins : minutes between automatic updates (defaults to 24*60)
+    metadata    : dictionary of extra user-specified attributes
+
+logs - capped log collection
+    action    : log entry
+    url       : url that action was related to
+    error     : boolean error flag
+    timestamp : UTC timestamp for log entry
+
+status - internal state
+    update_queue : size of update queue
+
+
