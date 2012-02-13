@@ -7,7 +7,7 @@ import flask
 import pymongo.objectid
 
 from oyster.conf import settings
-from oyster.client import get_configured_client
+from oyster.connection import get_configured_connection
 
 
 class JSONEncoder(json.JSONEncoder):
@@ -43,16 +43,16 @@ def api_wrapper(template=None):
 
 
 app = flask.Flask('oyster')
-client = get_configured_client()
+conn = get_configured_connection()
 
 
 @app.route('/')
 @api_wrapper('index.html')
 def index():
     status = {
-        'tracking': client.db.tracked.count(),
-        'need_update': client.get_update_queue_size(),
-        'logs': list(client.db.logs.find().sort('$natural', -1).limit(20)),
+        'tracking': conn.db.tracked.count(),
+        'need_update': conn.get_update_queue_size(),
+        'logs': list(conn.db.logs.find().sort('$natural', -1).limit(20)),
         'mongo_host': settings.MONGO_HOST,
     }
     return status
@@ -62,8 +62,8 @@ def index():
 @api_wrapper()
 def doc_list():
     status = {
-        'tracking': client.db.tracked.count(),
-        'need_update': client.get_update_queue_size(),
+        'tracking': conn.db.tracked.count(),
+        'need_update': conn.get_update_queue_size(),
     }
     return status
 
@@ -75,7 +75,7 @@ def log_view():
     size = 100
     prev_offset = max(offset - size, 0)
     next_offset = offset + size
-    logs = client.db.logs.find().sort('$natural', -1).skip(offset).limit(size)
+    logs = conn.db.logs.find().sort('$natural', -1).skip(offset).limit(size)
     return dict(logs=list(logs), prev_offset=prev_offset,
                 next_offset=next_offset, offset=offset)
 
@@ -83,14 +83,14 @@ def log_view():
 @app.route('/tracked/')
 @api_wrapper()
 def tracked():
-    tracked = list(client.db.tracked.find())
+    tracked = list(conn.db.tracked.find())
     return json.dumps(tracked, cls=JSONEncoder)
 
 
 @app.route('/tracked/<path:url>')
 def tracked_view(url):
     url = _path_fixer(url)
-    doc = client.db.tracked.find_one({'url': url})
+    doc = conn.db.tracked.find_one({'url': url})
     return json.dumps(doc, cls=JSONEncoder)
 
 
@@ -99,7 +99,7 @@ def show_doc(url, version):
     url = _path_fixer(url)
     if version == 'latest':
         version = -1
-    doc = client.get_version(url, version)
+    doc = conn.get_version(url, version)
     resp = flask.make_response(doc.read())
     resp.headers['content-type'] = doc.content_type
     return resp

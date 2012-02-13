@@ -4,7 +4,7 @@ from celery.execute import send_task
 from pymongo.objectid import ObjectId
 
 from oyster.conf import settings
-from oyster.client import get_configured_client
+from oyster.connection import get_configured_connection
 
 
 class UpdateTask(Task):
@@ -13,16 +13,16 @@ class UpdateTask(Task):
     ignore_result = True
 
     def __init__(self):
-        # one client per process
-        self.client = get_configured_client()
+        # one connection per process
+        self.conn = get_configured_connection()
 
 
     def run(self, doc_id):
-        doc = self.client.db.tracked.find_one({'_id': doc_id})
-        self.client.update(doc)
+        doc = self.conn.db.tracked.find_one({'_id': doc_id})
+        self.conn.update(doc)
         for hook in doc.get('post_update_hooks', []):
             send_task(hook, (doc_id,))
-        self.client.db.status.update({}, {'$inc': {'update_queue': -1}})
+        self.conn.db.status.update({}, {'$inc': {'update_queue': -1}})
 
 
 class UpdateTaskScheduler(PeriodicTask):
@@ -30,19 +30,19 @@ class UpdateTaskScheduler(PeriodicTask):
 
     # 60s tick
     run_every = 60
-    client = get_configured_client()
+    conn = get_configured_connection()
 
     def run(self):
         # if the update queue isn't empty, wait to add more
         # (currently the only way we avoid duplicates)
         # alternate option would be to set a _queued flag on documents
-        if self.client.db.status.find_one()['update_queue']:
+        if self.conn.db.status.find_one()['update_queue']:
             return
 
-        next_set = self.client.get_update_queue()
+        next_set = self.conn.get_update_queue()
         for doc in next_set:
             UpdateTask.delay(doc['_id'])
-            self.client.db.status.update({}, {'$inc': {'update_queue': 1}})
+            self.conn.db.status.update({}, {'$inc': {'update_queue': 1}})
 
 
 class ExternalStoreTask(Task):
@@ -61,20 +61,20 @@ class ExternalStoreTask(Task):
     abstract = True
 
     def __init__(self):
-        # one client per process
-        self.client = get_configured_client()
+        # one connection per process
+        self.conn = get_configured_connection()
 
     def run(self, doc_id, extract_text=lambda x: x):
         # get the document
-        doc = self.client.db.tracked.find_one({'_id': ObjectId(doc_id)})
-        filedata = self.client.get_version(doc['url']).read()
+        doc = self.conn.db.tracked.find_one({'_id': ObjectId(doc_id)})
+        filedata = self.conn.get_version(doc['url']).read()
         text = extract_text(filedata, doc['metadata'])
 
         # put the document into the data store
         result = self.upload_document(doc_id, text, doc['metadata'])
 
         doc[self.external_store + '_id'] = result
-        self.client.db.tracked.save(doc, safe=True)
+        self.conn.db.tracked.save(doc, safe=True)
 
 
     def upload_document(self, doc_id, filedata, metadata):

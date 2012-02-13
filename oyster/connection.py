@@ -9,21 +9,21 @@ import gridfs
 import scrapelib
 
 
-def get_configured_client():
-    """ helper factory, gets a client configured with oyster.conf.settings """
+def get_configured_connection():
+    """ factory, gets a connection configured with oyster.conf.settings """
     from oyster.conf import settings
-    return Client(mongo_host=settings.MONGO_HOST,
-                  mongo_port=settings.MONGO_PORT,
-                  mongo_db=settings.MONGO_DATABASE,
-                  mongo_log_maxsize=settings.MONGO_LOG_MAXSIZE,
-                  user_agent=settings.USER_AGENT,
-                  rpm=settings.REQUESTS_PER_MINUTE,
-                  timeout=settings.REQUEST_TIMEOUT,
-                  retry_attempts=settings.RETRY_ATTEMPTS,
-                  retry_wait_minutes=settings.RETRY_WAIT_MINUTES)
+    return Connection(mongo_host=settings.MONGO_HOST,
+                      mongo_port=settings.MONGO_PORT,
+                      mongo_db=settings.MONGO_DATABASE,
+                      mongo_log_maxsize=settings.MONGO_LOG_MAXSIZE,
+                      user_agent=settings.USER_AGENT,
+                      rpm=settings.REQUESTS_PER_MINUTE,
+                      timeout=settings.REQUEST_TIMEOUT,
+                      retry_attempts=settings.RETRY_ATTEMPTS,
+                      retry_wait_minutes=settings.RETRY_WAIT_MINUTES)
 
 
-class Client(object):
+class Connection(object):
     """ oyster's workhorse, handles tracking """
 
     def __init__(self, mongo_host='localhost', mongo_port=27017,
