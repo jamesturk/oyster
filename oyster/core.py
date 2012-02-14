@@ -8,6 +8,8 @@ import pymongo
 import scrapelib
 
 from .storage.gridfs import GridFSStorage
+from .storage.s3 import S3Storage
+
 
 class Kernel(object):
     """ oyster's workhorse, handles tracking """
@@ -29,7 +31,7 @@ class Kernel(object):
             pass
 
         # create storage class
-        self.storage = GridFSStorage(self)
+        self.storage = S3Storage(self)
 
         # create status document if it doesn't exist
         if self.db.status.count() == 0:

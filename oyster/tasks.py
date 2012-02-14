@@ -3,7 +3,6 @@ from celery.execute import send_task
 
 from pymongo.objectid import ObjectId
 
-from oyster.conf import settings
 from oyster.core import kernel
 
 
@@ -70,21 +69,3 @@ class ExternalStoreTask(Task):
     def upload_document(self, doc_id, filedata, metadata):
         """ abstract method, override on implementations """
         pass
-
-
-class S3StoreTask(ExternalStoreTask):
-    external_store = 's3'
-
-    import boto
-    s3conn = boto.connect_s3(settings.AWS_KEY, settings.AWS_SECRET)
-
-    def upload_document(self, doc_id, filedata, metadata):
-        """ upload the document to S3 """
-        bucket = self.s3conn.create_bucket(settings.AWS_BUCKET)
-        k = self.boto.s3.Key(bucket)
-        k.key = doc_id
-        k.set_contents_from_string(filedata)
-        k.set_acl('public-read')
-
-        url = 'http://%s.s3.amazonaws.com/%s' % (settings.AWS_BUCKET, doc_id)
-        return url
