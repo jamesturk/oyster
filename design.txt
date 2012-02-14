@@ -14,10 +14,13 @@ tracked - metadata for tracked resources
     _id         : internal id
     _random     : a random integer used for sorting
     url         : url of resource
-    versioning  : string indicating type of versioning to be used for this
-                  resource.  currently set to md5 for all documents
-    update_mins : minutes between automatic updates (defaults to 24*60)
+    doc_class   : string indicating the document class, allows for different
+                  settings/hooks for some documents
     metadata    : dictionary of extra user-specified attributes
+    versions    : list of dictionaries with the following keys:
+                      timestamp     : UTC timestamp
+                      <storage_key> : storage_id
+                      (may be s3_url, gridfs_id, etc.)
 
 logs - capped log collection
     action    : log entry
@@ -28,4 +31,10 @@ logs - capped log collection
 status - internal state
     update_queue : size of update queue
 
+
+Storage Interface
+=================
+    storage_key : key to store on versions
+    put(tracked_doc, data, content_type) -> id
+    get(id) -> file type object
 

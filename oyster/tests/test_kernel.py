@@ -13,6 +13,8 @@ class KernelTests(TestCase):
     def setUp(self):
         self.kernel = Kernel(mongo_db='oyster_test', retry_wait_minutes=1/60.)
         self.kernel._wipe()
+        self.kernel._add_doc_class('default', update_mins=30)
+        self.kernel._add_doc_class('fast-update', update_mins=0.01)
 
 
     def test_constructor(self):
@@ -42,11 +44,12 @@ class KernelTests(TestCase):
 
     def test_track_url(self):
         # basic insert
-        id1 = self.kernel.track_url('http://example.com', update_mins=30, pi=3)
+        id1 = self.kernel.track_url('http://example.com', 'default', pi=3)
         obj = self.kernel.db.tracked.find_one()
         assert '_random' in obj
-        assert obj['update_mins'] == 30
+        assert obj['doc_class'] == 'default'
         assert obj['metadata'] == {'pi': 3}
+        assert obj['versions'] == []
 
         # logging
         log = self.kernel.db.logs.find_one()
@@ -54,51 +57,53 @@ class KernelTests(TestCase):
         assert log['url'] == 'http://example.com'
 
         # track same url again with same metadata returns id
-        id2 = self.kernel.track_url('http://example.com', update_mins=30, pi=3)
+        id2 = self.kernel.track_url('http://example.com', 'default', pi=3)
         assert id1 == id2
 
         # can't track same URL twice with different metadata
-        assert_raises(ValueError, self.kernel.track_url, 'http://example.com')
+        assert_raises(ValueError, self.kernel.track_url, 'http://example.com',
+                      'default')
+        # logged error
+        assert self.kernel.db.logs.find_one({'error': 'tracking conflict'})
 
+        assert_raises(ValueError, self.kernel.track_url, 'http://example.com',
+                      'special-doc-class', pi=3)
         # logged error
         assert self.kernel.db.logs.find_one({'error': 'tracking conflict'})
 
 
+
     def test_md5_versioning(self):
-        doc = {'url': 'hello.txt'}
-        self.kernel.fs.put('hello!', filename='hello.txt')
-        assert not self.kernel.md5_versioning(doc, 'hello!')
-        assert self.kernel.md5_versioning(doc, 'hey!')
+        assert not self.kernel.md5_versioning('hello!', 'hello!')
+        assert self.kernel.md5_versioning('hello!', 'hey!')
 
 
     def test_update(self):
-        # get a single document tracked
-        self.kernel.track_url('http://example.com', update_mins=60, pi=3)
+        # get a single document tracked and call update on it
+        self.kernel.track_url('http://example.com', 'default')
         obj = self.kernel.db.tracked.find_one()
         self.kernel.update(obj)
 
-        # check that metadata has been updated
+        # check that the metadata has been updated
         newobj = self.kernel.db.tracked.find_one()
-        assert (newobj['last_update'] +
-                datetime.timedelta(minutes=newobj['update_mins']) ==
+        assert (newobj['last_update'] + datetime.timedelta(minutes=30) ==
                 newobj['next_update'])
         first_update = newobj['last_update']
         assert newobj['consecutive_errors'] == 0
 
-        # check that document exists in database
-        doc = self.kernel.fs.get_last_version()
-        assert doc.filename == 'http://example.com'
-        assert doc.content_type.startswith('text/html')
-        assert doc.pi == 3
+        assert len(newobj['versions']) == 1
+
+        # check that document exists in storage (TODO: storage test)
+        assert self.kernel.storage.get(newobj['versions'][0]['storage_key'])
 
         # check logs
         assert self.kernel.db.logs.find({'action': 'update'}).count() == 1
 
-        # and do an update..
+        # and do another update..
         self.kernel.update(obj)
 
         # hopefully example.com hasn't changed, this tests that md5 worked
-        assert self.kernel.db.fs.files.count() == 1
+        assert len(newobj['versions']) == 1
 
         # check that appropriate metadata updated
         newobj = self.kernel.db.tracked.find_one()
@@ -110,7 +115,7 @@ class KernelTests(TestCase):
 
     def test_update_failure(self):
         # track a non-existent URL
-        self.kernel.track_url('http://not_a_url')
+        self.kernel.track_url('http://not_a_url', 'default')
         obj = self.kernel.db.tracked.find_one()
         self.kernel.update(obj)
 
@@ -128,23 +133,10 @@ class KernelTests(TestCase):
         assert obj['consecutive_errors'] == 2
 
 
-    def test_all_versions(self):
-        random_url = 'http://en.wikipedia.org/wiki/Special:Random'
-        self.kernel.track_url(random_url)
-        obj = self.kernel.db.tracked.find_one()
-        self.kernel.update(obj)
-
-        versions = self.kernel.get_all_versions(random_url)
-        assert versions[0].filename == random_url
-
-        self.kernel.update(obj)
-        assert len(self.kernel.get_all_versions(random_url)) == 2
-
-
     def test_get_update_queue(self):
-        self.kernel.track_url('never-updates', update_mins=0.01)
-        self.kernel.track_url('bad-uri', update_mins=0.01)
-        self.kernel.track_url('http://example.com', update_mins=0.01)
+        self.kernel.track_url('never-updates', 'fast-update')
+        self.kernel.track_url('bad-uri', 'fast-update')
+        self.kernel.track_url('http://example.com', 'fast-update')
 
         never = self.kernel.db.tracked.find_one(dict(url='never-updates'))
         bad = self.kernel.db.tracked.find_one(dict(url='bad-uri'))
@@ -170,9 +162,9 @@ class KernelTests(TestCase):
 
 
     def test_get_update_queue_size(self):
-        self.kernel.track_url('a', update_mins=0.01)
-        self.kernel.track_url('b', update_mins=0.01)
-        self.kernel.track_url('c', update_mins=0.01)
+        self.kernel.track_url('a', 'fast-update')
+        self.kernel.track_url('b', 'fast-update')
+        self.kernel.track_url('c', 'fast-update')
 
         a = self.kernel.db.tracked.find_one(dict(url='a'))
         b = self.kernel.db.tracked.find_one(dict(url='b'))
