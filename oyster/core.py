@@ -53,7 +53,8 @@ class Kernel(object):
             self.storage[name] = StorageCls(self)
 
         # set document classes
-        _doc_class_fields = ('update_mins', 'storage_engine')
+        _doc_class_fields = ('update_mins', 'storage_engine',
+                             'onchanged')
         self.doc_classes = doc_classes or {}
         for dc_name, dc_props in self.doc_classes.iteritems():
             for key in _doc_class_fields:
@@ -165,6 +166,9 @@ class Kernel(object):
                                     'storage_key': storage_id,
                                     'storage_type': storage.storage_type,
                                    })
+            # fire off onchanged functions
+            for onchanged in doc_class['onchanged']:
+                onchanged(doc)
 
         if error:
             # if there's been an error, increment the consecutive_errors count

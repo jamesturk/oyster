@@ -7,14 +7,26 @@ import pymongo
 
 from oyster.core import Kernel
 
+def hook_fired(doc):
+    doc['hook_fired'] = doc.get('hook_fired', 0) + 1
+
+RANDOM_URL = 'http://www.random.org/integers/?num=1&min=-1000000000&max=1000000000&col=1&base=10&format=plain&rnd=new'
 
 class KernelTests(TestCase):
 
     def setUp(self):
         doc_classes = {'default':
-                        {'update_mins': 30, 'storage_engine': 'dummy'},
+                        {'update_mins': 30, 'storage_engine': 'dummy',
+                         'onchanged': []
+                        },
                        'fast-update':
-                        {'update_mins': 1/60., 'storage_engine': 'dummy'},
+                        {'update_mins': 1/60., 'storage_engine': 'dummy',
+                         'onchanged': []
+                        },
+                       'change-hook':
+                        {'update_mins': 30, 'storage_engine': 'dummy',
+                         'onchanged': [hook_fired]
+                        }
                       }
         self.kernel = Kernel(mongo_db='oyster_test', retry_wait_minutes=1/60.,
                              doc_classes=doc_classes)
@@ -134,6 +146,33 @@ class KernelTests(TestCase):
 
         obj = self.kernel.db.tracked.find_one()
         assert obj['consecutive_errors'] == 2
+
+
+    def test_update_onchanged_fire_only_on_change(self):
+        self.kernel.track_url('http://example.com', 'change-hook')
+        obj = self.kernel.db.tracked.find_one()
+        self.kernel.update(obj)
+
+        doc = self.kernel.db.tracked.find_one()
+        assert doc['hook_fired'] == 1
+
+        # again, we rely on example.com not updating
+        self.kernel.update(obj)
+        doc = self.kernel.db.tracked.find_one()
+        assert doc['hook_fired'] == 1
+
+    def test_update_onchanged_fire_again_on_change(self):
+        self.kernel.track_url(RANDOM_URL, 'change-hook')
+        obj = self.kernel.db.tracked.find_one()
+        self.kernel.update(obj)
+
+        doc = self.kernel.db.tracked.find_one()
+        assert doc['hook_fired'] == 1
+
+        # we rely on this URL updating
+        self.kernel.update(obj)
+        doc = self.kernel.db.tracked.find_one()
+        assert doc['hook_fired'] == 2
 
 
     def test_get_update_queue(self):
