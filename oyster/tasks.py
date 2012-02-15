@@ -36,36 +36,3 @@ class UpdateTaskScheduler(PeriodicTask):
         for doc in next_set:
             UpdateTask.delay(doc['_id'])
             kernel.db.status.update({}, {'$inc': {'update_queue': 1}})
-
-
-class ExternalStoreTask(Task):
-    """ base class for tasks that push documents to an external store
-
-        when overiding be sure to define
-            external_store
-                short string describing external store (eg. 's3')
-            upload_document(self, doc_id, filedata, metadata)
-                function that uploads the document and returns a unique ID
-    """
-
-    # results go straight to database
-    ignore_result = True
-    # used as a base class
-    abstract = True
-
-    def run(self, doc_id, extract_text=lambda x: x):
-        # get the document
-        doc = kernel.db.tracked.find_one({'_id': ObjectId(doc_id)})
-        filedata = kernel.get_version(doc['url']).read()
-        text = extract_text(filedata, doc['metadata'])
-
-        # put the document into the data store
-        result = self.upload_document(doc_id, text, doc['metadata'])
-
-        doc[self.external_store + '_id'] = result
-        kernel.db.tracked.save(doc, safe=True)
-
-
-    def upload_document(self, doc_id, filedata, metadata):
-        """ abstract method, override on implementations """
-        pass

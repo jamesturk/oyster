@@ -4,12 +4,6 @@ and keeps a local copy up to date depending on user-specified criteria.
 Data Model
 ==========
 
-Oyster keeps its data in a MongoDB instance and makes use of GridFS to store the
-raw document data.
-
-In addition to the standard gridfs collections (fs.chunks, fs.files) oyster
-uses the following collections:
-
 tracked - metadata for tracked resources
     _id         : internal id
     _random     : a random integer used for sorting
