@@ -93,9 +93,6 @@ class KernelTests(TestCase):
 
         assert len(newobj['versions']) == 1
 
-        # check that document exists in storage (TODO: storage test)
-        assert self.kernel.storage.get(newobj['versions'][0]['storage_key'])
-
         # check logs
         assert self.kernel.db.logs.find({'action': 'update'}).count() == 1
 
