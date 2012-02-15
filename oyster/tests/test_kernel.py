@@ -11,11 +11,14 @@ from oyster.core import Kernel
 class KernelTests(TestCase):
 
     def setUp(self):
-        self.kernel = Kernel(mongo_db='oyster_test', retry_wait_minutes=1/60.)
+        doc_classes = {'default':
+                        {'update_mins': 30, 'storage_engine': 'dummy'},
+                       'fast-update':
+                        {'update_mins': 1/60., 'storage_engine': 'dummy'},
+                      }
+        self.kernel = Kernel(mongo_db='oyster_test', retry_wait_minutes=1/60.,
+                             doc_classes=doc_classes)
         self.kernel._wipe()
-        self.kernel._add_doc_class('default', update_mins=30)
-        self.kernel._add_doc_class('fast-update', update_mins=0.01)
-
 
     def test_constructor(self):
         c = Kernel('127.0.0.1', 27017, 'testdb', mongo_log_maxsize=5000,
@@ -30,6 +33,9 @@ class KernelTests(TestCase):
         assert c.scraper.user_agent == 'test-ua'
         assert c.scraper.requests_per_minute == 30
         assert c.scraper.timeout == 60
+
+        # ensure that a bad document class raises an error
+        assert_raises(ValueError, Kernel, doc_classes={'bad-doc': {}})
 
 
     def test_log(self):
