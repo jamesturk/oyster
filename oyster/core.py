@@ -83,7 +83,7 @@ class Kernel(object):
         self.doc_classes[doc_class] = properties
 
 
-    def track_url(self, url, doc_class, **kwargs):
+    def track_url(self, url, doc_class, id=None, **kwargs):
         """
         Add a URL to the set of tracked URLs, accessible via a given filename.
 
@@ -99,8 +99,11 @@ class Kernel(object):
         # if data is already tracked and this is just a duplicate call
         # return the original object
         if tracked:
+            # only check id if id was passed in
+            id_matches = (tracked['_id'] == id) if id else True
             if (tracked['metadata'] == kwargs and
-                tracked['doc_class'] == doc_class):
+                tracked['doc_class'] == doc_class and
+                id_matches):
                 return tracked['_id']
             else:
                 self.log('track', url=url, error='tracking conflict')
@@ -108,9 +111,13 @@ class Kernel(object):
                                  'metadata' % url)
 
         self.log('track', url=url)
-        return self.db.tracked.insert(dict(url=url, doc_class=doc_class,
-                                       _random=random.randint(0, sys.maxint),
-                                       versions=[], metadata=kwargs))
+
+        newdoc = dict(url=url, doc_class=doc_class,
+                      _random=random.randint(0, sys.maxint),
+                      versions=[], metadata=kwargs)
+        if id:
+            newdoc['_id'] = id
+        return self.db.tracked.insert(newdoc)
 
 
     def md5_versioning(self, olddata, newdata):

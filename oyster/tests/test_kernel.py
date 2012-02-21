@@ -78,12 +78,24 @@ class KernelTests(TestCase):
         id2 = self.kernel.track_url('http://example.com', 'default', pi=3)
         assert id1 == id2
 
-        # can't track same URL twice with different metadata
+        # test setting id
+        out = self.kernel.track_url('http://example.com/2', 'default',
+                                    'fixed-id')
+        assert out == 'fixed-id'
+
+        # can't track same URL twice with different id
+        assert_raises(ValueError, self.kernel.track_url, 'http://example.com',
+                      'default', 'hard-coded-id')
+        # logged error
+        assert self.kernel.db.logs.find_one({'error': 'tracking conflict'})
+
+        # ... with different metadata
         assert_raises(ValueError, self.kernel.track_url, 'http://example.com',
                       'default')
         # logged error
         assert self.kernel.db.logs.find_one({'error': 'tracking conflict'})
 
+        # ... different doc class
         assert_raises(ValueError, self.kernel.track_url, 'http://example.com',
                       'special-doc-class', pi=3)
         # logged error
