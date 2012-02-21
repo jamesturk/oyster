@@ -23,6 +23,10 @@ class KernelTests(TestCase):
                         {'update_mins': 1/60., 'storage_engine': 'dummy',
                          'onchanged': []
                         },
+                       'one-time':
+                        {'update_mins': None, 'storage_engine': 'dummy',
+                         'onchanged': [],
+                        },
                        'change-hook':
                         {'update_mins': 30, 'storage_engine': 'dummy',
                          'onchanged': [hook_fired]
@@ -102,6 +106,17 @@ class KernelTests(TestCase):
         assert self.kernel.db.logs.find_one({'error': 'tracking conflict'})
 
 
+    def test_no_update(self):
+        # update
+        self.kernel.track_url('http://example.com', 'one-time')
+        obj = self.kernel.db.tracked.find_one()
+        self.kernel.update(obj)
+
+        newobj = self.kernel.db.tracked.find_one()
+        assert newobj['next_update'] == None
+
+        assert self.kernel.get_update_queue() == []
+        assert self.kernel.get_update_queue_size() == 0
 
     def test_md5_versioning(self):
         assert not self.kernel.md5_versioning('hello!', 'hello!')

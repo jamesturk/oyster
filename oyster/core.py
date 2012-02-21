@@ -193,7 +193,10 @@ class Kernel(object):
 
         # last_update/next_update are separate from question of versioning
         doc['last_update'] = now
-        doc['next_update'] = now + datetime.timedelta(minutes=update_mins)
+        if update_mins:
+            doc['next_update'] = now + datetime.timedelta(minutes=update_mins)
+        else:
+            doc['next_update'] = None
 
         self.log('update', url=url, new_doc=new_version, error=error)
 
@@ -217,8 +220,10 @@ class Kernel(object):
         queue = list(new)
 
         # pull the rest from those for which next_update is in the past
-        next = self.db.tracked.find({'next_update':
-             {'$lt': datetime.datetime.utcnow()}}).sort('_random')
+        next = self.db.tracked.find({'$and': [
+            {'next_update': {'$ne': None}},
+            {'next_update': {'$lt': datetime.datetime.utcnow()}},
+        ]}).sort('_random')
         queue.extend(next)
 
         return queue
@@ -230,8 +235,10 @@ class Kernel(object):
         ``len(self.get_update_queue())``, but is computed more efficiently.
         """
         new = self.db.tracked.find({'next_update': {'$exists': False}}).count()
-        next = self.db.tracked.find({'next_update':
-                                 {'$lt': datetime.datetime.utcnow()}}).count()
+        next = self.db.tracked.find({'$and': [
+            {'next_update': {'$ne': None}},
+            {'next_update': {'$lt': datetime.datetime.utcnow()}},
+        ]}).count()
         return new+next
 
 
