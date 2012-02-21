@@ -178,7 +178,7 @@ class Kernel(object):
                                    })
             # fire off onchanged functions
             for onchanged in doc_class['onchanged']:
-                onchanged(doc)
+                onchanged(doc, newdata)
 
         if error:
             # if there's been an error, increment the consecutive_errors count

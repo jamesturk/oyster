@@ -7,7 +7,7 @@ import pymongo
 
 from oyster.core import Kernel
 
-def hook_fired(doc):
+def hook_fired(doc, newdata):
     doc['hook_fired'] = doc.get('hook_fired', 0) + 1
 
 RANDOM_URL = 'http://www.random.org/integers/?num=1&min=-1000000000&max=1000000000&col=1&base=10&format=plain&rnd=new'
