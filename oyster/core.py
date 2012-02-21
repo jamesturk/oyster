@@ -94,6 +94,9 @@ class Kernel(object):
         **kwargs
             any keyword args will be added to the document's metadata
         """
+        if doc_class not in self.doc_classes:
+            raise ValueError('unregistered doc_class %s' % doc_class)
+
         tracked = self.db.tracked.find_one({'url': url})
 
         # if data is already tracked and this is just a duplicate call
