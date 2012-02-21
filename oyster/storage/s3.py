@@ -8,11 +8,11 @@ class S3Storage(object):
 
     def __init__(self, kernel):
         self.s3conn = boto.connect_s3(settings.AWS_KEY, settings.AWS_SECRET)
+        self.bucket = self.s3conn.create_bucket(settings.AWS_BUCKET)
 
     def put(self, tracked_doc, data, content_type):
         """ upload the document to S3 """
-        bucket = self.s3conn.create_bucket(settings.AWS_BUCKET)
-        k = boto.s3.key.Key(bucket)
+        k = boto.s3.key.Key(self.bucket)
         k.key = tracked_doc['_id']
         headers = {'x-amz-acl': 'public-read',
                    'Content-Type': content_type}
