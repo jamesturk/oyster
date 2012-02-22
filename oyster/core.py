@@ -241,6 +241,14 @@ class Kernel(object):
         ]}).count()
         return new+next
 
+    def get_last_version(self, doc):
+        try:
+            doc_class = self.doc_classes[doc['doc_class']]
+        except KeyError:
+            raise ValueError('unregistered doc_class %s' % doc['doc_class'])
+        storage = self.storage[doc_class['storage_engine']]
+        return storage.get(doc['versions'][-1]['storage_key'])
+
 
 
 def _get_configured_kernel():
