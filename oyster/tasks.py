@@ -17,6 +17,8 @@ class UpdateTask(Task):
         for task in doc.get('post_update_tasks', []):
             send_task(hook, (doc_id,))
         kernel.db.status.update({}, {'$inc': {'update_queue': -1}})
+        # don't sit on a connection
+        kernel.db.connection.end_request()
 
 
 class UpdateTaskScheduler(PeriodicTask):
@@ -36,3 +38,5 @@ class UpdateTaskScheduler(PeriodicTask):
         for doc in next_set:
             UpdateTask.delay(doc['_id'])
             kernel.db.status.update({}, {'$inc': {'update_queue': 1}})
+            # don't sit on a connection
+            kernel.db.connection.end_request()
