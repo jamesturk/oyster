@@ -13,14 +13,14 @@ class S3Storage(object):
     def put(self, tracked_doc, data, content_type):
         """ upload the document to S3 """
         k = boto.s3.key.Key(self.bucket)
-        k.key = tracked_doc['_id']
+        key_name = getattr(settings, AWS_PREFIX, '') + tracked_doc['_id']
+        k.key = key_name
         headers = {'x-amz-acl': 'public-read',
                    'Content-Type': content_type}
         k.set_contents_from_string(data, headers=headers)
         # can also set metadata if we want, useful?
 
-        url = 'http://%s.s3.amazonaws.com/%s' % (settings.AWS_BUCKET,
-                                                 tracked_doc['_id'])
+        url = 'http://%s.s3.amazonaws.com/%s' % (settings.AWS_BUCKET, key_name)
         return url
 
     def get(self, id):
