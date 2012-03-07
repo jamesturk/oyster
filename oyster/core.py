@@ -111,7 +111,8 @@ class Kernel(object):
             else:
                 self.log('track', url=url, error='tracking conflict')
                 raise ValueError('%s is already tracked with different '
-                                 'metadata' % url)
+                                 'metadata: (tracked: %r) (new: %r)' %
+                                 (url, tracked['metadata'], kwargs)
 
         self.log('track', url=url)
 
