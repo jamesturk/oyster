@@ -3,14 +3,16 @@ import datetime
 from unittest import TestCase
 
 from nose.tools import assert_raises
-import pymongo
 
 from oyster.core import Kernel
+
 
 def hook_fired(doc, newdata):
     doc['hook_fired'] = doc.get('hook_fired', 0) + 1
 
-RANDOM_URL = 'http://www.random.org/integers/?num=1&min=-1000000000&max=1000000000&col=1&base=10&format=plain&rnd=new'
+RANDOM_URL = ('http://www.random.org/integers/?num=1&min=-1000000000&'
+              'max=1000000000&col=1&base=10&format=plain&rnd=new')
+
 
 class KernelTests(TestCase):
 
@@ -20,7 +22,7 @@ class KernelTests(TestCase):
                          'onchanged': []
                         },
                        'fast-update':
-                        {'update_mins': 1/60., 'storage_engine': 'dummy',
+                        {'update_mins': 1 / 60., 'storage_engine': 'dummy',
                          'onchanged': []
                         },
                        'one-time':
@@ -32,7 +34,8 @@ class KernelTests(TestCase):
                          'onchanged': [hook_fired]
                         }
                       }
-        self.kernel = Kernel(mongo_db='oyster_test', retry_wait_minutes=1/60.,
+        self.kernel = Kernel(mongo_db='oyster_test',
+                             retry_wait_minutes=1 / 60.,
                              doc_classes=doc_classes)
         self.kernel._wipe()
 
@@ -53,7 +56,6 @@ class KernelTests(TestCase):
         # ensure that a bad document class raises an error
         assert_raises(ValueError, Kernel, doc_classes={'bad-doc': {}})
 
-
     def test_log(self):
         self.kernel.log('action1', 'http://example.com')
         self.kernel.log('action2', 'http://test.com', error=True, pi=3)
@@ -62,7 +64,6 @@ class KernelTests(TestCase):
         assert x['action'] == 'action2'
         assert x['url'] == 'http://test.com'
         assert x['pi'] == 3
-
 
     def test_track_url(self):
         # basic insert
@@ -105,7 +106,6 @@ class KernelTests(TestCase):
         # logged error
         assert self.kernel.db.logs.find_one({'error': 'tracking conflict'})
 
-
     def test_no_update(self):
         # update
         self.kernel.track_url('http://example.com', 'one-time')
@@ -121,7 +121,6 @@ class KernelTests(TestCase):
     def test_md5_versioning(self):
         assert not self.kernel.md5_versioning('hello!', 'hello!')
         assert self.kernel.md5_versioning('hello!', 'hey!')
-
 
     def test_update(self):
         # get a single document tracked and call update on it
@@ -154,7 +153,6 @@ class KernelTests(TestCase):
         # check that logs updated
         assert self.kernel.db.logs.find({'action': 'update'}).count() == 2
 
-
     def test_update_failure(self):
         # track a non-existent URL
         self.kernel.track_url('http://not_a_url', 'default')
@@ -173,7 +171,6 @@ class KernelTests(TestCase):
 
         obj = self.kernel.db.tracked.find_one()
         assert obj['consecutive_errors'] == 2
-
 
     def test_update_onchanged_fire_only_on_change(self):
         self.kernel.track_url('http://example.com', 'change-hook')
@@ -200,7 +197,6 @@ class KernelTests(TestCase):
         self.kernel.update(obj)
         doc = self.kernel.db.tracked.find_one()
         assert doc['hook_fired'] == 2
-
 
     def test_get_update_queue(self):
         self.kernel.track_url('never-updates', 'fast-update')
@@ -229,15 +225,12 @@ class KernelTests(TestCase):
         queue = self.kernel.get_update_queue()
         assert len(queue) == 3
 
-
     def test_get_update_queue_size(self):
         self.kernel.track_url('a', 'fast-update')
         self.kernel.track_url('b', 'fast-update')
         self.kernel.track_url('c', 'fast-update')
 
         a = self.kernel.db.tracked.find_one(dict(url='a'))
-        b = self.kernel.db.tracked.find_one(dict(url='b'))
-        c = self.kernel.db.tracked.find_one(dict(url='c'))
 
         # size should start at 3
         assert self.kernel.get_update_queue_size() == 3

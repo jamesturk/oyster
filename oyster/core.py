@@ -2,12 +2,12 @@ import datetime
 import hashlib
 import random
 import sys
-import urllib
 
 import pymongo
 import scrapelib
 
 from .storage import engines
+
 
 class Kernel(object):
     """ oyster's workhorse, handles tracking """
@@ -62,13 +62,11 @@ class Kernel(object):
                     raise ValueError('doc_class %s missing key %s' %
                                      (dc_name, key))
 
-
     def _wipe(self):
         """ exists primarily for debug use, wipes entire db """
         self.db.drop_collection('tracked')
         self.db.drop_collection('logs')
         self.db.drop_collection('status')
-
 
     def log(self, action, url, error=False, **kwargs):
         """ add an entry to the oyster log """
@@ -78,10 +76,8 @@ class Kernel(object):
         kwargs['timestamp'] = datetime.datetime.utcnow()
         self.db.logs.insert(kwargs)
 
-
     def _add_doc_class(self, doc_class, **properties):
         self.doc_classes[doc_class] = properties
-
 
     def track_url(self, url, doc_class, id=None, **kwargs):
         """
@@ -123,13 +119,11 @@ class Kernel(object):
             newdoc['_id'] = id
         return self.db.tracked.insert(newdoc)
 
-
     def md5_versioning(self, olddata, newdata):
         """ return True if md5 changed or if file is new """
         old_md5 = hashlib.md5(olddata).hexdigest()
         new_md5 = hashlib.md5(newdata).hexdigest()
         return old_md5 != new_md5
-
 
     def update(self, doc):
         """
@@ -187,7 +181,7 @@ class Kernel(object):
             c_errors = doc.get('consecutive_errors', 0)
             doc['consecutive_errors'] = c_errors + 1
             if c_errors <= self.retry_attempts:
-                update_mins = self.retry_wait_minutes * (2**c_errors)
+                update_mins = self.retry_wait_minutes * (2 ** c_errors)
         else:
             # reset error count if all was ok
             doc['consecutive_errors'] = 0
@@ -202,7 +196,6 @@ class Kernel(object):
         self.log('update', url=url, new_doc=new_version, error=error)
 
         self.db.tracked.save(doc, safe=True)
-
 
     def get_update_queue(self):
         """
@@ -229,7 +222,6 @@ class Kernel(object):
 
         return queue
 
-
     def get_update_queue_size(self):
         """
         Get the size of the update queue, this should match
@@ -240,7 +232,7 @@ class Kernel(object):
             {'next_update': {'$ne': None}},
             {'next_update': {'$lt': datetime.datetime.utcnow()}},
         ]}).count()
-        return new+next
+        return new + next
 
     def get_last_version(self, doc):
         try:
@@ -249,7 +241,6 @@ class Kernel(object):
             raise ValueError('unregistered doc_class %s' % doc['doc_class'])
         storage = self.storage[doc_class['storage_engine']]
         return storage.get(doc['versions'][-1]['storage_key'])
-
 
 
 def _get_configured_kernel():

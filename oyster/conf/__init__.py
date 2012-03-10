@@ -1,5 +1,6 @@
 from oyster.conf import default_settings
 
+
 class Settings(object):
     def __init__(self):
         pass

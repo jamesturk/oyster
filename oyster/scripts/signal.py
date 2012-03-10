@@ -3,6 +3,7 @@ import argparse
 
 from oyster.core import kernel
 
+
 def main():
     parser = argparse.ArgumentParser(
         description='do a task for all documents in a doc_class',
@@ -14,10 +15,10 @@ def main():
 
     args = parser.parse_args()
 
-    docs = kernel.db.tracked.find({'doc_class':args.doc_class})
+    docs = kernel.db.tracked.find({'doc_class': args.doc_class})
     print '%s docs in %s' % (docs.count(), args.doc_class)
 
-    path, func = args.function.rsplit('.',1)
+    path, func = args.function.rsplit('.', 1)
     mod = __import__(path, fromlist=[func])
     func = getattr(mod, func)
 

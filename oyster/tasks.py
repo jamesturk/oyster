@@ -1,8 +1,6 @@
 from celery.task.base import Task, PeriodicTask
 from celery.execute import send_task
 
-from pymongo.objectid import ObjectId
-
 from oyster.core import kernel
 
 
@@ -15,7 +13,7 @@ class UpdateTask(Task):
         doc = kernel.db.tracked.find_one({'_id': doc_id})
         kernel.update(doc)
         for task in doc.get('post_update_tasks', []):
-            send_task(hook, (doc_id,))
+            send_task(task, (doc_id,))
         kernel.db.status.update({}, {'$inc': {'update_queue': -1}})
         # don't sit on a connection
         kernel.db.connection.end_request()

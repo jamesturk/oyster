@@ -3,6 +3,7 @@ from oyster.storage.s3 import S3Storage
 from oyster.storage.gridfs import GridFSStorage
 from oyster.storage.dummy import DummyStorage
 
+
 def _simple_storage_test(StorageCls):
     kernel = Kernel(mongo_db='oyster_test')
     storage = StorageCls(kernel)

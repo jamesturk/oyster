@@ -44,6 +44,7 @@ def api_wrapper(template=None):
 
 app = flask.Flask('oyster')
 
+
 @app.route('/')
 @api_wrapper('index.html')
 def index():

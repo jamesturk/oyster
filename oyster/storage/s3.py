@@ -13,7 +13,7 @@ class S3Storage(object):
     def put(self, tracked_doc, data, content_type):
         """ upload the document to S3 """
         k = boto.s3.key.Key(self.bucket)
-        key_name = getattr(settings, AWS_PREFIX, '') + tracked_doc['_id']
+        key_name = getattr(settings, 'AWS_PREFIX', '') + tracked_doc['_id']
         k.key = key_name
         headers = {'x-amz-acl': 'public-read',
                    'Content-Type': content_type}

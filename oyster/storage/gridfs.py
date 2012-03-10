@@ -2,8 +2,8 @@ from __future__ import absolute_import
 
 import gridfs
 
-class GridFSStorage(object):
 
+class GridFSStorage(object):
     storage_type = 'gridfs'
 
     def __init__(self, kernel):

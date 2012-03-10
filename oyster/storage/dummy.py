@@ -1,8 +1,3 @@
-import urllib
-import boto
-from oyster.conf import settings
-
-
 class DummyStorage(object):
     """ should NOT be used outside of testing """
 
