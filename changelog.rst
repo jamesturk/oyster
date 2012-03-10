@@ -3,6 +3,7 @@ oyster changelog
 
 0.3.1
 -----
+**2012-03-10**
     * add validation of doc_class
     * add ability to do one-time updates
     * change how hooks work
