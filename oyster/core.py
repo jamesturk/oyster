@@ -91,24 +91,37 @@ class Kernel(object):
             any keyword args will be added to the document's metadata
         """
         if doc_class not in self.doc_classes:
-            raise ValueError('unregistered doc_class %s' % doc_class)
+            error = 'unregistered doc_class %s' % doc_class
+            self.log('track', url=url, error=error)
+            raise ValueError(error)
 
-        tracked = self.db.tracked.find_one({'url': url})
+        # try and find an existing version of this document
+        tracked = None
 
-        # if data is already tracked and this is just a duplicate call
-        # return the original object
+        if id:
+            tracked = self.db.tracked.find_one({'_id': id})
+
+        if not tracked:
+            tracked = self.db.tracked.find_one({'url': url})
+
+        # if id exists, ensure that URL and doc_class haven't changed
+        # then return existing data (possibly with refreshed metadata)
         if tracked:
-            # only check id if id was passed in
-            id_matches = (tracked['_id'] == id) if id else True
-            if (tracked['metadata'] == kwargs and
-                tracked['doc_class'] == doc_class and
-                id_matches):
+            if (tracked['url'] == url and
+                tracked['doc_class'] == doc_class):
+                if kwargs != tracked['metadata']:
+                    tracked['metadata'] = kwargs
+                    self.db.tracked.save(tracked, safe=True)
                 return tracked['_id']
             else:
-                self.log('track', url=url, error='tracking conflict')
-                raise ValueError('%s is already tracked with different '
-                                 'metadata: (tracked: %r) (new: %r)' %
-                                 (url, tracked['metadata'], kwargs))
+                # id existed but with different URL
+                error = ('%s already exists with different data (tracked: '
+                         '%s, %s) (new: %s, %s)' % (tracked['_id'],
+                                                    tracked['url'],
+                                                    tracked['doc_class'],
+                                                    url, doc_class))
+                self.log('track', url=url, error=error)
+                raise ValueError(error)
 
         self.log('track', url=url)
 
@@ -117,7 +130,7 @@ class Kernel(object):
                       versions=[], metadata=kwargs)
         if id:
             newdoc['_id'] = id
-        return self.db.tracked.insert(newdoc)
+        return self.db.tracked.insert(newdoc, safe=True)
 
     def md5_versioning(self, olddata, newdata):
         """ return True if md5 changed or if file is new """

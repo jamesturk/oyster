@@ -8,7 +8,13 @@ class S3Storage(object):
 
     def __init__(self, kernel):
         self.s3conn = boto.connect_s3(settings.AWS_KEY, settings.AWS_SECRET)
-        self.bucket = self.s3conn.create_bucket(settings.AWS_BUCKET)
+        self._bucket = False
+
+    @property
+    def bucket(self):
+        if not self._bucket:
+            self._bucket = self.s3conn.create_bucket(settings.AWS_BUCKET)
+        return self._bucket
 
     def put(self, tracked_doc, data, content_type):
         """ upload the document to S3 """

@@ -83,28 +83,27 @@ class KernelTests(TestCase):
         id2 = self.kernel.track_url('http://example.com', 'default', pi=3)
         assert id1 == id2
 
-        # test setting id
+        # test manually set id
         out = self.kernel.track_url('http://example.com/2', 'default',
                                     'fixed-id')
         assert out == 'fixed-id'
 
-        # can't track same URL twice with different id
-        assert_raises(ValueError, self.kernel.track_url, 'http://example.com',
-                      'default', 'hard-coded-id')
-        # logged error
-        assert self.kernel.db.logs.find_one({'error': 'tracking conflict'})
+        # can't pass track same id twice with different url
+        self.kernel.db.logs.drop()
+        assert_raises(ValueError, self.kernel.track_url,
+                      'http://example.com/3', 'default', 'fixed-id')
+        assert 'already exists' in self.kernel.db.logs.find_one()['error']
 
-        # ... with different metadata
-        assert_raises(ValueError, self.kernel.track_url, 'http://example.com',
-                      'default')
-        # logged error
-        assert self.kernel.db.logs.find_one({'error': 'tracking conflict'})
+        # ... or different doc class
+        self.kernel.db.logs.drop()
+        assert_raises(ValueError, self.kernel.track_url,
+                      'http://example.com/2', 'change-hook', 'fixed-id')
+        assert 'already exists' in self.kernel.db.logs.find_one()['error']
 
-        # ... different doc class
-        assert_raises(ValueError, self.kernel.track_url, 'http://example.com',
-                      'special-doc-class', pi=3)
-        # logged error
-        assert self.kernel.db.logs.find_one({'error': 'tracking conflict'})
+        # different metadata is ok, but it should be updated
+        self.kernel.track_url('http://example.com/2', 'default', 'fixed-id',
+                              pi=3)
+        self.kernel.db.tracked.find_one({'_id': 'fixed-id'})['metadata']['pi'] == 3
 
     def test_no_update(self):
         # update

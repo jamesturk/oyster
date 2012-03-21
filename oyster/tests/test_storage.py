@@ -1,3 +1,6 @@
+from nose.plugins.skip import SkipTest
+
+from oyster.conf import settings
 from oyster.core import Kernel
 from oyster.storage.s3 import S3Storage
 from oyster.storage.gridfs import GridFSStorage
@@ -21,6 +24,8 @@ def _simple_storage_test(StorageCls):
 
 
 def test_s3():
+    #if not hasattr(settings, 'AWS_BUCKET'):
+    #    raise SkipTest('S3 not configured')
     _simple_storage_test(S3Storage)
 
 
