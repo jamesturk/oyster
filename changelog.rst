@@ -1,6 +1,10 @@
 oyster changelog
 ================
 
+0.3.2
+-----
+    * become much more tolerant of duplicates
+
 0.3.1
 -----
 **2012-03-10**
