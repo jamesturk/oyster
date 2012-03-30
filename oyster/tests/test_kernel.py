@@ -18,9 +18,8 @@ class KernelTests(TestCase):
 
     def setUp(self):
         doc_classes = {'default':
-                        {'update_mins': 30, 'storage_engine': 'dummy',
-                         'onchanged': []
-                        },
+                        # omit doc class, defaults to dummy
+                        {'update_mins': 30, 'onchanged': [] },
                        'fast-update':
                         {'update_mins': 1 / 60., 'storage_engine': 'dummy',
                          'onchanged': []

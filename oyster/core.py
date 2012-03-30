@@ -16,7 +16,7 @@ class Kernel(object):
                  mongo_db='oyster', mongo_log_maxsize=100000000,
                  user_agent='oyster', rpm=60, timeout=300,
                  retry_attempts=3, retry_wait_minutes=60,
-                 doc_classes=None,
+                 doc_classes=None, default_storage_engine='dummy',
                 ):
         """
         configurable for ease of testing, only one should be instantiated
@@ -53,14 +53,16 @@ class Kernel(object):
             self.storage[name] = StorageCls(self)
 
         # set document classes
-        _doc_class_fields = ('update_mins', 'storage_engine',
-                             'onchanged')
+        _doc_class_fields = ('update_mins', 'onchanged')
         self.doc_classes = doc_classes or {}
         for dc_name, dc_props in self.doc_classes.iteritems():
             for key in _doc_class_fields:
                 if key not in dc_props:
                     raise ValueError('doc_class %s missing key %s' %
                                      (dc_name, key))
+            # set a default storage engine
+            if 'storage_engine' not in dc_props:
+                dc_props['storage_engine'] = default_storage_engine
 
     def _wipe(self):
         """ exists primarily for debug use, wipes entire db """
@@ -269,6 +271,7 @@ def _get_configured_kernel():
                   retry_attempts=settings.RETRY_ATTEMPTS,
                   retry_wait_minutes=settings.RETRY_WAIT_MINUTES,
                   doc_classes=settings.DOCUMENT_CLASSES,
+                  default_storage_engine=settings.DEFAULT_STORAGE_ENGINE,
                  )
 
 kernel = _get_configured_kernel()
