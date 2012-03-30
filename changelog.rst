@@ -4,6 +4,9 @@ oyster changelog
 0.3.2
 -----
     * become much more tolerant of duplicates
+    * skip S3 test if not prepared
+    * use doc_class AWS_PREFIX and AWS_BUCKET if set
+    * add DEFAULT_STORAGE_ENGINE setting
 
 0.3.1
 -----
