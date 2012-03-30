@@ -19,8 +19,8 @@ class S3Storage(object):
 
     def _get_opt(self, doc_class, setting, default=None):
         """ doc_class first, then setting, then default """
-        self.kernel.doc_classes[doc_class].get(setting,
-           getattr(settings, setting, default))
+        return self.kernel.doc_classes[doc_class].get(setting,
+                                          getattr(settings, setting, default))
 
     def put(self, tracked_doc, data, content_type):
         """ upload the document to S3 """
