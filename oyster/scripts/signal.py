@@ -24,7 +24,8 @@ def main():
 
     for doc in docs:
         func(doc, kernel.get_last_version(doc))
-        # optionally save doc?
+        # make optional?
+        kernel.db.tracked.save(doc, safe=True)
 
 if __name__ == '__main__':
     main()
