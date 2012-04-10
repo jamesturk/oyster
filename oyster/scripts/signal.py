@@ -23,9 +23,12 @@ def main():
     func = getattr(mod, func)
 
     for doc in docs:
-        func(doc, kernel.get_last_version(doc))
-        # make optional?
-        kernel.db.tracked.save(doc, safe=True)
+        try:
+            func(doc, kernel.get_last_version(doc))
+            # make optional?
+            kernel.db.tracked.save(doc, safe=True)
+        except Exception as e:
+            print 'Error while processing %s: %s' % (doc, e)
 
 if __name__ == '__main__':
     main()
