@@ -1,6 +1,11 @@
 oyster changelog
 ================
 
+0.3.3
+-----
+    * S3 storage backend bugfix
+    * improvements to signal script
+
 0.3.2
 -----
 **2012-03-29**

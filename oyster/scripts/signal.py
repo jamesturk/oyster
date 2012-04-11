@@ -15,7 +15,7 @@ def main():
 
     args = parser.parse_args()
 
-    docs = kernel.db.tracked.find({'doc_class': args.doc_class})
+    docs = kernel.db.tracked.find({'doc_class': args.doc_class}, timeout=False)
     print '%s docs in %s' % (docs.count(), args.doc_class)
 
     path, func = args.function.rsplit('.', 1)
