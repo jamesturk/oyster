@@ -62,8 +62,9 @@ class CloudSearchPush(Task):
     def run(self, doc_id):
         doc = kernel.db.tracked.find_one({'_id': doc_id})
         text = kernel.extract_text(doc)
-        pieces = [text[i:i+MAX_BYTES] for i in xrange(0, len(text), MAX_BYTES)]
+        pieces = [text[i:i+self.MAX_BYTES] for i in
+                  xrange(0, len(text), self.MAX_BYTES)]
 
         for i, piece in enumerate(pieces):
             cloud_id = '%s_%s' % (doc_id.lower(), i)
-            cs.add_document(cloud_id, text=piece, **doc['metadata'])
+            self.cs.add_document(cloud_id, text=piece, **doc['metadata'])
