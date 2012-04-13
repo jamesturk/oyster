@@ -19,7 +19,7 @@ def main():
     print '%s docs in %s' % (docs.count(), args.doc_class)
 
     for doc in docs:
-        send_task(args.task, doc['_id'])
+        send_task(args.task, (doc['_id'], ))
 
 if __name__ == '__main__':
     main()
