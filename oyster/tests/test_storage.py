@@ -8,14 +8,14 @@ from oyster.storage.dummy import DummyStorage
 
 def _simple_storage_test(StorageCls):
     kernel = Kernel(mongo_db='oyster_test')
+    kernel.doc_classes['default'] = {}
     storage = StorageCls(kernel)
 
     # ensure the class has a storage_type attribute
     assert hasattr(storage, 'storage_type')
 
     doc = {'_id': 'aabbccddeeff', 'url': 'http://localhost:8000/#test',
-           'metadata': {}
-          }
+           'doc_class': 'default', 'metadata': {} }
     storage_id = storage.put(doc, 'hello oyster', 'text/plain')
     assert storage_id
 
