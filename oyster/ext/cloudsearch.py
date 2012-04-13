@@ -1,7 +1,9 @@
 import json
 import requests
 from celery.task.base import Task
+
 from ..core import kernel
+from ..conf import settings
 
 
 class CloudSearch(object):
@@ -55,7 +57,7 @@ class CloudSearchPush(Task):
 
     # a bit under 1MB
     MAX_BYTES = 1048000
-    cs = CloudSearch('openstates-billtext', '57xota2lexdoaymh5l56sh3vdm')
+    cs = CloudSearch(settings.CLOUDSEARCH_DOMAIN, settings.CLOUDSEARCH_ID)
 
     def run(self, doc_id):
         doc = kernel.db.tracked.find_one({'_id': doc_id})
