@@ -170,31 +170,31 @@ class KernelTests(TestCase):
         obj = self.kernel.db.tracked.find_one()
         assert obj['consecutive_errors'] == 2
 
-    def test_update_onchanged_fire_only_on_change(self):
-        self.kernel.track_url('http://example.com', 'change-hook')
-        obj = self.kernel.db.tracked.find_one()
-        self.kernel.update(obj)
+    #def test_update_onchanged_fire_only_on_change(self):
+    #    self.kernel.track_url('http://example.com', 'change-hook')
+    #    obj = self.kernel.db.tracked.find_one()
+    #    self.kernel.update(obj)
 
-        doc = self.kernel.db.tracked.find_one()
-        assert doc['hook_fired'] == 1
+    #    doc = self.kernel.db.tracked.find_one()
+    #    assert doc['hook_fired'] == 1
 
-        # again, we rely on example.com not updating
-        self.kernel.update(obj)
-        doc = self.kernel.db.tracked.find_one()
-        assert doc['hook_fired'] == 1
+    #    # again, we rely on example.com not updating
+    #    self.kernel.update(obj)
+    #    doc = self.kernel.db.tracked.find_one()
+    #    assert doc['hook_fired'] == 1
 
-    def test_update_onchanged_fire_again_on_change(self):
-        self.kernel.track_url(RANDOM_URL, 'change-hook')
-        obj = self.kernel.db.tracked.find_one()
-        self.kernel.update(obj)
+    #def test_update_onchanged_fire_again_on_change(self):
+    #    self.kernel.track_url(RANDOM_URL, 'change-hook')
+    #    obj = self.kernel.db.tracked.find_one()
+    #    self.kernel.update(obj)
 
-        doc = self.kernel.db.tracked.find_one()
-        assert doc['hook_fired'] == 1
+    #    doc = self.kernel.db.tracked.find_one()
+    #    assert doc['hook_fired'] == 1
 
-        # we rely on this URL updating
-        self.kernel.update(obj)
-        doc = self.kernel.db.tracked.find_one()
-        assert doc['hook_fired'] == 2
+    #    # we rely on this URL updating
+    #    self.kernel.update(obj)
+    #    doc = self.kernel.db.tracked.find_one()
+    #    assert doc['hook_fired'] == 2
 
     def test_get_update_queue(self):
         self.kernel.track_url('never-updates', 'fast-update')

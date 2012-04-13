@@ -7,6 +7,7 @@ import pymongo
 import scrapelib
 
 from .storage import engines
+from celery.execute import send_task
 
 
 class Kernel(object):
@@ -187,8 +188,8 @@ class Kernel(object):
                                     'storage_type': storage.storage_type,
                                    })
             # fire off onchanged functions
-            for onchanged in doc_class['onchanged']:
-                onchanged(doc, newdata)
+            for onchanged in doc_class.get('onchanged', []):
+                send_task(onchanged, (doc['_id'],))
 
         if error:
             # if there's been an error, increment the consecutive_errors count
