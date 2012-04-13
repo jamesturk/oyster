@@ -257,6 +257,16 @@ class Kernel(object):
         storage = self.storage[doc_class['storage_engine']]
         return storage.get(doc['versions'][-1]['storage_key'])
 
+    def extract_text(self, doc):
+        version = self.get_last_version(doc)
+        doc_class = self.doc_classes[doc['doc_class']]
+        try:
+            extract_text = doc_class['extract_text']
+        except KeyError:
+            raise ValueError('doc_class %s missing extract_text' %
+                             doc['doc_class'])
+        return extract_text(doc, version)
+
 
 def _get_configured_kernel():
     """ factory, gets a connection configured with oyster.conf.settings """
