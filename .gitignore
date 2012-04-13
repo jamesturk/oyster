@@ -1,3 +1,4 @@
 celerybeat-schedule
 oyster_settings.py
+oyster.egg-info/
 *.pyc

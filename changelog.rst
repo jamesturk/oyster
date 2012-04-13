@@ -5,6 +5,7 @@ oyster changelog
 -----
     * S3 storage backend bugfix
     * improvements to signal script
+    * oyster.ext additions
 
 0.3.2
 -----
