@@ -12,7 +12,8 @@ class UpdateTask(Task):
     def run(self, doc_id):
         doc = kernel.db.tracked.find_one({'_id': doc_id})
         kernel.update(doc)
-        for task in doc.get('post_update_tasks', []):
+        for task in kernel.doc_classes[doc['doc_class']].get(
+            'post_update_tasks', []):
             send_task(task, (doc_id,))
         kernel.db.status.update({}, {'$inc': {'update_queue': -1}})
         # don't sit on a connection
