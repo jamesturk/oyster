@@ -14,7 +14,7 @@ class S3Storage(object):
     @property
     def bucket(self):
         if not self._bucket:
-            self._bucket = self.s3conn.create_bucket(settings.AWS_BUCKET)
+            self._bucket = self.s3conn.get_bucket(settings.AWS_BUCKET)
         return self._bucket
 
     def _get_opt(self, doc_class, setting, default=None):
