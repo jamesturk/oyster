@@ -17,7 +17,7 @@ class CloudSearch(object):
 
         self._current_batch = []
         self._current_size = 0
-        self._flush_very = flush_every
+        self._flush_every = flush_every
 
 
     def flush(self):
@@ -37,7 +37,7 @@ class CloudSearch(object):
         newjson = json.dumps(newdoc)
         newsize = len(newjson)
 
-        if ((self._current_size + newsize > self.MAX_BYTES) or 
+        if ((self._current_size + newsize > self.MAX_BYTES) or
             (self._flush_every and len(self._current_batch > self._flush_every)
             )):
             self.flush()
