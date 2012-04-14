@@ -37,9 +37,9 @@ class CloudSearch(object):
         newjson = json.dumps(newdoc)
         newsize = len(newjson)
 
-        if ((self._current_size + newsize > self.MAX_BYTES) or
-            (self._flush_every and len(self._current_batch > self._flush_every)
-            )):
+        if (self._current_size + newsize > self.MAX_BYTES or
+            (self._flush_every and
+             len(self._current_batch) > self._flush_every)):
             self.flush()
 
         self._current_batch.append(json.dumps(newdoc))
