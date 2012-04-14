@@ -27,10 +27,18 @@ class UpdateTaskScheduler(PeriodicTask):
         # if the update queue isn't empty, wait to add more
         # (currently the only way we avoid duplicates)
         # alternate option would be to set a _queued flag on documents
-        if kernel.db.status.find_one()['update_queue']:
+        update_queue_size = kernel.db.status.find_one()['update_queue']
+        if update_queue_size:
+            self.get_logger().debug('waiting, update_queue_size={0}'.format(
+                                    update_queue_size))
             return
 
         next_set = kernel.get_update_queue()
+        if next_set:
+            self.get_logger().debug('repopulating update_queue')
+        else:
+            self.get_logger().debug('kernel.update_queue empty')
+
         for doc in next_set:
             UpdateTask.delay(doc['_id'])
             kernel.db.status.update({}, {'$inc': {'update_queue': 1}})
