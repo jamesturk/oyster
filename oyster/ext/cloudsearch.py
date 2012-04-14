@@ -21,6 +21,7 @@ class CloudSearch(object):
 
 
     def flush(self):
+        print 'flushing!'
         if self._current_batch:
             payload = '[{0}]'.format(','.join(self._current_batch))
             resp = requests.post(self.doc_url, payload,
@@ -29,7 +30,7 @@ class CloudSearch(object):
             self._current_size = 0
             if resp.status_code >= 400:
                 # http://docs.amazonwebservices.com/cloudsearch/latest/developerguide/DocumentsBatch.html
-                print resp.status_code, resp.text
+                raise Exception('{0}: {1}'.format(resp.status_code, resp.text))
 
     def add_document(self, id, **kwargs):
         newdoc = {'type': 'add', 'version': 1, 'lang': 'en',
