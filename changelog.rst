@@ -3,9 +3,10 @@ oyster changelog
 
 0.3.3
 -----
+**2012-04-16**
     * S3 storage backend bugfix
     * improvements to signal script
-    * oyster.ext additions
+    * oyster.ext cloudsearch and superfastmatch
 
 0.3.2
 -----
