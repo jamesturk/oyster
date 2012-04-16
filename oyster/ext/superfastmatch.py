@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from celery.task.base import Task
 
 from ..core import kernel
