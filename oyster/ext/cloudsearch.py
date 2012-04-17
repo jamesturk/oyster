@@ -1,9 +1,15 @@
+# needed so we can import cloudsearch
+from __future__ import absolute_import
+
 from celery.task.base import Task
 
 from ..core import kernel
 from ..conf import settings
 
+from cloudsearch import CloudSearch
+
 cs = CloudSearch(settings.CLOUDSEARCH_DOMAIN, settings.CLOUDSEARCH_ID, 20)
+
 
 class CloudSearchPush(Task):
     """ task that updates documents """
