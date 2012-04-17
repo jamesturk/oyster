@@ -104,8 +104,7 @@ class Kernel(object):
 
         if id:
             tracked = self.db.tracked.find_one({'_id': id})
-
-        if not tracked:
+        else:
             tracked = self.db.tracked.find_one({'url': url})
 
         # if id exists, ensure that URL and doc_class haven't changed
