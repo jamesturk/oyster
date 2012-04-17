@@ -1,3 +1,4 @@
+# needed so we can import superfastmatch.Client
 from __future__ import absolute_import
 from celery.task.base import Task
 
@@ -19,4 +20,4 @@ class SuperFastMatchPush(Task):
         doc = kernel.db.tracked.find_one({'_id': doc_id})
         text = kernel.extract_text(doc)
         doctype, docid = settings.SUPERFASTMATCH_ID_FUNC(doc_id)
-        sfm.add(doctype, docid, text, **doc['metadata'])
+        sfm.add(doctype, docid, text, **doc['metadata'], defer=True)
