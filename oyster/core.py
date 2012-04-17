@@ -37,7 +37,8 @@ class Kernel(object):
             self.db.status.insert({'update_queue': 0})
 
         # ensure an index on _random
-        self.db.tracked.ensure_index([('_random', pymongo.ASCENDING)])
+        self.db.tracked.ensure_index('_random')
+        self.db.tracked.ensure_index('url')
 
         self.scraper = scrapelib.Scraper(user_agent=user_agent,
                                          requests_per_minute=rpm,
