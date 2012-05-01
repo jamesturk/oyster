@@ -1,6 +1,6 @@
     <tr{% if log.error %} class="error" {% endif %}>
         <td>{{log.action}}</td>
-        <td><a href="{{request.script_root}}/tracked/{{log.url}}">{{log.url}}</td>
+        <td><a href="{{request.script_root}}/tracked/{{log._id}}">{{log.url}}</td>
         <td>{{log.timestamp.strftime("%Y-%m-%d %H:%M:%S")}}</td>
         <td>{% if log.error %}{{log.error}}{% endif %}</td>
     </tr>

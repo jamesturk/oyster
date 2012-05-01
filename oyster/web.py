@@ -86,22 +86,11 @@ def tracked():
     return json.dumps(tracked, cls=JSONEncoder)
 
 
-@app.route('/tracked/<path:url>')
+@app.route('/tracked/<path:id>')
 def tracked_view(url):
     url = _path_fixer(url)
-    doc = kernel.db.tracked.find_one({'url': url})
+    doc = kernel.db.tracked.find_one({'_id': id})
     return json.dumps(doc, cls=JSONEncoder)
-
-
-@app.route('/doc/<path:url>/<version>')
-def show_doc(url, version):
-    url = _path_fixer(url)
-    if version == 'latest':
-        version = -1
-    doc = kernel.get_version(url, version)
-    resp = flask.make_response(doc.read())
-    resp.headers['content-type'] = doc.content_type
-    return resp
 
 
 if __name__ == '__main__':
