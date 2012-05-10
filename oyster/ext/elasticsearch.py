@@ -17,8 +17,7 @@ class ElasticSearchPush(Task):
 
         self.get_logger().debug('adding {0} to ElasticSearch'.format(doc_id))
 
-        for i, piece in enumerate(pieces):
-            es.index(dict(doc['metadata'], text=text),
-                     settings.ELASTICSEARCH_INDEX,
-                     settings.ELASTICSEARCH_DOC_TYPE,
-                     id=doc_id)
+        es.index(dict(doc['metadata'], text=text),
+                 settings.ELASTICSEARCH_INDEX,
+                 settings.ELASTICSEARCH_DOC_TYPE,
+                 id=doc_id)
