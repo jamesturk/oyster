@@ -86,9 +86,8 @@ def tracked():
     return json.dumps(tracked, cls=JSONEncoder)
 
 
-@app.route('/tracked/<path:id>')
-def tracked_view(url):
-    url = _path_fixer(url)
+@app.route('/tracked/<id>')
+def tracked_view(id):
     doc = kernel.db.tracked.find_one({'_id': id})
     return json.dumps(doc, cls=JSONEncoder)
 
