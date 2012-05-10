@@ -15,7 +15,7 @@ except ImportError:
 long_description = open('README.rst').read()
 
 setup(name="oyster",
-      version='0.3.2',
+      version='0.3.3-dev',
       py_modules=['oyster'],
       author="James Turk",
       author_email='jturk@sunlightfoundation.com',

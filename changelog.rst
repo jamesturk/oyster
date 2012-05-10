@@ -1,12 +1,12 @@
 oyster changelog
 ================
 
-0.3.3
------
-**2012-04-16**
+0.3.3-dev
+---------
     * S3 storage backend bugfix
     * improvements to signal script
-    * oyster.ext cloudsearch and superfastmatch
+    * oyster.ext cloudsearch, elasticsearch, and superfastmatch
+    * add tox/python setup.py test (thanks Marc Abramowitz!)
 
 0.3.2
 -----
