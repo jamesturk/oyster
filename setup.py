@@ -1,11 +1,21 @@
 #!/usr/bin/env python
-from setuptools import setup
-from oyster import __version__
 
-long_description = open('README.rst').read()
+import os
+from setuptools import setup
+
+# Hack to prevent stupid "TypeError: 'NoneType' object is not callable" error
+# in multiprocessing/util.py _exit_function when running `python
+# setup.py test` (see
+# http://www.eby-sarna.com/pipermail/peak/2010-May/003357.html)
+try:
+    import multiprocessing
+except ImportError:
+    pass
+
+long_description = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 
 setup(name="oyster",
-      version=__version__,
+      version='0.3.2',
       py_modules=['oyster'],
       author="James Turk",
       author_email='jturk@sunlightfoundation.com',
