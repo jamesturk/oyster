@@ -15,7 +15,7 @@ class ElasticSearchPush(Task):
         doc = kernel.db.tracked.find_one({'_id': doc_id})
         text = kernel.extract_text(doc)
 
-        self.get_logger().debug('adding {1} to ElasticSearch'.format(doc_id))
+        self.get_logger().debug('adding {0} to ElasticSearch'.format(doc_id))
 
         for i, piece in enumerate(pieces):
             es.index(dict(doc['metadata'], text=text),
