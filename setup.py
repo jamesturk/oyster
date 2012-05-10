@@ -1,6 +1,7 @@
 #!/usr/bin/env python
+
+import os
 from setuptools import setup
-from oyster import __version__
 
 # Hack to prevent stupid "TypeError: 'NoneType' object is not callable" error
 # in multiprocessing/util.py _exit_function when running `python
@@ -11,10 +12,11 @@ try:
 except ImportError:
     pass
 
-long_description = open('README.rst').read()
+long_description = open(os.path.join(os.path.dirname(__file__),
+                                     'README.rst')).read()
 
 setup(name="oyster",
-      version=__version__,
+      version='0.3.2',
       py_modules=['oyster'],
       author="James Turk",
       author_email='jturk@sunlightfoundation.com',
