@@ -4,7 +4,7 @@ import datetime
 import functools
 
 import flask
-import pymongo.objectid
+import bson.objectid
 
 from oyster.conf import settings
 from oyster.core import kernel
@@ -14,7 +14,7 @@ class JSONEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, datetime.datetime):
             return obj.isoformat()
-        elif isinstance(obj, pymongo.objectid.ObjectId):
+        elif isinstance(obj, bson.objectid.ObjectId):
             return str(obj)
         else:
             return super(JSONEncoder, self).default(obj)
