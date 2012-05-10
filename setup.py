@@ -2,6 +2,15 @@
 from setuptools import setup
 from oyster import __version__
 
+# Hack to prevent stupid "TypeError: 'NoneType' object is not callable" error
+# in multiprocessing/util.py _exit_function when running `python
+# setup.py test` (see
+# http://www.eby-sarna.com/pipermail/peak/2010-May/003357.html)
+try:
+    import multiprocessing
+except ImportError:
+    pass
+
 long_description = open('README.rst').read()
 
 setup(name="oyster",
@@ -23,6 +32,8 @@ setup(name="oyster",
                    ],
       install_requires=["httplib2 >= 0.6.0", "scrapelib >= 0.5.4",
                         "pymongo >= 1.11", "flask", "celery"],
+      tests_require=["nose"],
+      test_suite='nose.collector',
       entry_points="""
 [console_scripts]
 scrapeshell = scrapelib:scrapeshell
