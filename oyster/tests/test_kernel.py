@@ -56,12 +56,12 @@ class KernelTests(TestCase):
         assert_raises(ValueError, Kernel, doc_classes={'bad-doc': {}})
 
     def test_log(self):
-        self.kernel.log('action1', 'http://example.com')
-        self.kernel.log('action2', 'http://test.com', error=True, pi=3)
+        self.kernel.log('action1', 'example')
+        self.kernel.log('action2', 'test', error=True, pi=3)
         assert self.kernel.db.logs.count() == 2
         x = self.kernel.db.logs.find_one({'error': True})
         assert x['action'] == 'action2'
-        assert x['url'] == 'http://test.com'
+        assert x['doc_id'] == 'test'
         assert x['pi'] == 3
 
     def test_track_url(self):

@@ -72,10 +72,10 @@ class Kernel(object):
         self.db.drop_collection('logs')
         self.db.drop_collection('status')
 
-    def log(self, action, url, error=False, **kwargs):
+    def log(self, action, doc_id, error=False, **kwargs):
         """ add an entry to the oyster log """
         kwargs['action'] = action
-        kwargs['url'] = url
+        kwargs['doc_id'] = doc_id
         kwargs['error'] = error
         kwargs['timestamp'] = datetime.datetime.utcnow()
         self.db.logs.insert(kwargs)
@@ -96,7 +96,7 @@ class Kernel(object):
         """
         if doc_class not in self.doc_classes:
             error = 'unregistered doc_class %s' % doc_class
-            self.log('track', url=url, error=error)
+            self.log('track', id, url=url, error=error)
             raise ValueError(error)
 
         # try and find an existing version of this document
@@ -123,10 +123,10 @@ class Kernel(object):
                                                     tracked['url'],
                                                     tracked['doc_class'],
                                                     url, doc_class))
-                self.log('track', url=url, error=error)
+                self.log('track', id, url=url, error=error)
                 raise ValueError(error)
 
-        self.log('track', url=url)
+        self.log('track', id, url=url)
 
         newdoc = dict(url=url, doc_class=doc_class,
                       _random=random.randint(0, sys.maxint),
@@ -209,7 +209,8 @@ class Kernel(object):
         else:
             doc['next_update'] = None
 
-        self.log('update', url=url, new_doc=new_version, error=error)
+        self.log('update', doc['_id'], url=url, new_doc=new_version,
+                 error=error)
 
         self.db.tracked.save(doc, safe=True)
 
