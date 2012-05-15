@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import argparse
 import traceback
+import random
 from celery.execute import send_task
 from celery import current_app
 
@@ -22,14 +23,15 @@ def main():
     docs = kernel.db.tracked.find({'doc_class': args.doc_class,
                                    'versions': {'$ne': []}
                                   }, timeout=False)
-    print '%s docs in %s' % (docs.count(), args.doc_class)
+    total = docs.count()
+    print '{0} docs in {1}'.format(total, args.doc_class)
 
     if args.sample:
-        print 'sampling 100 documents'
-        docs = docs.limit(100)
+        limit = 100
+        print 'sampling {0} documents'.format(limit)
+        docs = docs.limit(limit).offset(random.randint(0, total-limit))
         args.immediate = True
 
-    total = docs.count()
     errors = 0
 
     if args.immediate:
