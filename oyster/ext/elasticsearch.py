@@ -26,3 +26,4 @@ class ElasticSearchPush(Task):
                      id=doc_id)
         except Exception as e:
             kernel.log(self.action, doc_id, error=True, exception=str(e))
+            raise
