@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import argparse
+import traceback
 from celery.execute import send_task
 from celery import current_app
 
@@ -28,11 +29,20 @@ def main():
         docs = docs.limit(100)
         args.immediate = True
 
+    total = docs.count()
+    errors = 0
+
     if args.immediate:
         module, name = args.task.rsplit('.', 1)
         task = getattr(__import__(module, fromlist=[name]), name)
         for doc in docs:
-            task.apply((doc['_id'],), throw=True)
+            try:
+                task.apply((doc['_id'],), throw=True)
+            except Exception:
+                errors += 1
+                traceback.print_exc()
+        print '{0} errors in {1} documents'.format(errors, total)
+
     else:
         for doc in docs:
             send_task(args.task, (doc['_id'], ))
