@@ -29,7 +29,7 @@ def main():
     if args.sample:
         limit = 100
         print 'sampling {0} documents'.format(limit)
-        docs = docs.limit(limit).offset(random.randint(0, total-limit))
+        docs = docs[limit(limit).skip(random.randint(0, total-limit))
         args.immediate = True
 
     errors = 0
