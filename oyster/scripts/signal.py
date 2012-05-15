@@ -28,7 +28,7 @@ def main():
         module, name = args.task.rsplit('.', 1)
         task = getattr(__import__(module, fromlist=[name]), name)
         for doc in docs:
-            task(doc['_id'])
+            task.apply((doc['_id'],), throw=True)
 
     else:
         for doc in docs:
