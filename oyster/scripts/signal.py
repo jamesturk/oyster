@@ -25,7 +25,8 @@ def main():
     if args.sample:
         print 'sampling 100 documents'
         docs = docs.limit(100)
-        task = current_app.tasks[name]
+        module, name = args.task.rsplit('.', 1)
+        task = getattr(__import__(module, fromlist=[name]), name)
         for doc in docs:
             task.apply((doc['_id'],))
 
