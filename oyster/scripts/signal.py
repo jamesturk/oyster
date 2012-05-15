@@ -14,6 +14,7 @@ def main():
     parser.add_argument('doc_class', type=str,
                         help='doc_class to apply function to')
     parser.add_argument('--sample', action='store_true')
+    parser.add_argument('--immediate', action='store_true')
 
     args = parser.parse_args()
 
@@ -25,11 +26,13 @@ def main():
     if args.sample:
         print 'sampling 100 documents'
         docs = docs.limit(100)
+        args.immediate = True
+
+    if args.immediate:
         module, name = args.task.rsplit('.', 1)
         task = getattr(__import__(module, fromlist=[name]), name)
         for doc in docs:
             task.apply((doc['_id'],), throw=True)
-
     else:
         for doc in docs:
             send_task(args.task, (doc['_id'], ))
