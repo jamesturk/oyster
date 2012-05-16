@@ -45,7 +45,7 @@ class MongoHandler(logging.Handler):
                 pass
         self.collection = db[collection]
         self.async = async
-        MongoHandler.__init__(self, level)
+        logging.Handler.__init__(self, level)
         self.formatter = MongoFormatter()
 
     def emit(self, record):
