@@ -21,6 +21,7 @@ class ElasticSearchPush(Task):
             if not text:
                 self.log.info('no text for %s', doc_id,
                               extra={'doc_class':doc['doc_class']})
+                return
 
             self.log.info('tracked %s', doc_id,
                           extra={'doc_class':doc['doc_class']})
