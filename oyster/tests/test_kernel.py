@@ -2,7 +2,7 @@ import time
 import datetime
 from unittest import TestCase
 
-from nose.tools import assert_raises
+from nose.tools import assert_raises, assert_equal
 
 from oyster.core import Kernel
 
@@ -44,8 +44,6 @@ class KernelTests(TestCase):
                    retry_attempts=7, retry_wait_minutes=8)
         assert c.db.connection.host == '127.0.0.1'
         assert c.db.connection.port == 27017
-        assert c.db.logs.options()['capped'] == True
-        assert c.db.logs.options()['size'] == 5000
         assert c.retry_wait_minutes == 8
         # TODO: test retry_attempts
         assert c.scraper.user_agent == 'test-ua'
@@ -55,15 +53,6 @@ class KernelTests(TestCase):
         # ensure that a bad document class raises an error
         assert_raises(ValueError, Kernel, doc_classes={'bad-doc': {}})
 
-    def test_log(self):
-        self.kernel.log('action1', 'example')
-        self.kernel.log('action2', 'test', error=True, pi=3)
-        assert self.kernel.db.logs.count() == 2
-        x = self.kernel.db.logs.find_one({'error': True})
-        assert x['action'] == 'action2'
-        assert x['doc_id'] == 'test'
-        assert x['pi'] == 3
-
     def test_track_url(self):
         # basic insert
         id1 = self.kernel.track_url('http://example.com', 'default', pi=3)
@@ -72,11 +61,6 @@ class KernelTests(TestCase):
         assert obj['doc_class'] == 'default'
         assert obj['metadata'] == {'pi': 3}
         assert obj['versions'] == []
-
-        # logging
-        log = self.kernel.db.logs.find_one()
-        assert log['action'] == 'track'
-        assert log['url'] == 'http://example.com'
 
         # track same url again with same metadata returns id
         id2 = self.kernel.track_url('http://example.com', 'default', pi=3)
@@ -88,16 +72,12 @@ class KernelTests(TestCase):
         assert out == 'fixed-id'
 
         # can't pass track same id twice with different url
-        self.kernel.db.logs.drop()
         assert_raises(ValueError, self.kernel.track_url,
                       'http://example.com/3', 'default', 'fixed-id')
-        assert 'already exists' in self.kernel.db.logs.find_one()['error']
 
         # ... or different doc class
-        self.kernel.db.logs.drop()
         assert_raises(ValueError, self.kernel.track_url,
                       'http://example.com/2', 'change-hook', 'fixed-id')
-        assert 'already exists' in self.kernel.db.logs.find_one()['error']
 
         # different metadata is ok, but it should be updated
         self.kernel.track_url('http://example.com/2', 'default', 'fixed-id',
@@ -135,9 +115,6 @@ class KernelTests(TestCase):
 
         assert len(newobj['versions']) == 1
 
-        # check logs
-        assert self.kernel.db.logs.find({'action': 'update'}).count() == 1
-
         # and do another update..
         self.kernel.update(obj)
 
@@ -148,9 +125,6 @@ class KernelTests(TestCase):
         newobj = self.kernel.db.tracked.find_one()
         assert first_update < newobj['last_update']
 
-        # check that logs updated
-        assert self.kernel.db.logs.find({'action': 'update'}).count() == 2
-
     def test_update_failure(self):
         # track a non-existent URL
         self.kernel.track_url('http://not_a_url', 'default')
@@ -159,10 +133,6 @@ class KernelTests(TestCase):
 
         obj = self.kernel.db.tracked.find_one()
         assert obj['consecutive_errors'] == 1
-
-        # we should have logged an error too
-        assert self.kernel.db.logs.find({'action': 'update',
-                                         'error': {'$ne': False}}).count() == 1
 
         # update again
         self.kernel.update(obj)

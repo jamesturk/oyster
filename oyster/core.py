@@ -1,4 +1,5 @@
 import datetime
+import logging
 import hashlib
 import random
 import sys
@@ -6,6 +7,7 @@ import sys
 import pymongo
 import scrapelib
 
+from .mongolog import MongoHandler
 from .storage import engines
 from celery.execute import send_task
 
@@ -23,14 +25,14 @@ class Kernel(object):
         configurable for ease of testing, only one should be instantiated
         """
 
-        # set up a capped log if it doesn't exist
+        # set up the log
         self.db = pymongo.Connection(mongo_host, mongo_port)[mongo_db]
-        try:
-            self.db.create_collection('logs', capped=True,
-                                      size=mongo_log_maxsize)
-        except pymongo.errors.CollectionInvalid:
-            # cap collection if not capped?
-            pass
+
+        self.log = logging.getLogger('oyster')
+        self.log.setLevel(logging.DEBUG)
+        self.log.addHandler(MongoHandler(mongo_db, host=mongo_host,
+                                         port=mongo_port,
+                                         capped_size=mongo_log_maxsize))
 
         # create status document if it doesn't exist
         if self.db.status.count() == 0:
@@ -72,14 +74,6 @@ class Kernel(object):
         self.db.drop_collection('logs')
         self.db.drop_collection('status')
 
-    def log(self, action, doc_id, error=False, **kwargs):
-        """ add an entry to the oyster log """
-        kwargs['action'] = action
-        kwargs['doc_id'] = doc_id
-        kwargs['error'] = error
-        kwargs['timestamp'] = datetime.datetime.utcnow()
-        self.db.logs.insert(kwargs)
-
     def _add_doc_class(self, doc_class, **properties):
         self.doc_classes[doc_class] = properties
 
@@ -95,9 +89,9 @@ class Kernel(object):
             any keyword args will be added to the document's metadata
         """
         if doc_class not in self.doc_classes:
-            error = 'unregistered doc_class %s' % doc_class
-            self.log('track', id, url=url, error=error)
-            raise ValueError(error)
+            error = 'error tracking %s, unregistered doc_class %s'
+            self.log.error(error, url, doc_class)
+            raise ValueError(error % (url, doc_class))
 
         # try and find an existing version of this document
         tracked = None
@@ -118,15 +112,14 @@ class Kernel(object):
                 return tracked['_id']
             else:
                 # id existed but with different URL
-                error = ('%s already exists with different data (tracked: '
-                         '%s, %s) (new: %s, %s)' % (tracked['_id'],
-                                                    tracked['url'],
-                                                    tracked['doc_class'],
-                                                    url, doc_class))
-                self.log('track', id, url=url, error=error)
-                raise ValueError(error)
+                message = ('%s already exists with different data (tracked: '
+                           '%s, %s) (new: %s, %s)')
+                args = (tracked['_id'], tracked['url'], tracked['doc_class'],
+                        url, doc_class)
+                self.log.error(message, *args)
+                raise ValueError(message % args)
 
-        self.log('track', id, url=url)
+        self.log.info('tracked %s [%s]', url, id)
 
         newdoc = dict(url=url, doc_class=doc_class,
                       _random=random.randint(0, sys.maxint),
@@ -209,8 +202,11 @@ class Kernel(object):
         else:
             doc['next_update'] = None
 
-        self.log('update', doc['_id'], url=url, new_doc=new_version,
-                 error=error)
+        if error:
+            self.log.warning('error updating %s [%s]', url, doc['_id'])
+        else:
+            new_version = ' (new)'
+            self.log.info('updated %s [%s]%s', url, doc['_id'], new_version)
 
         self.db.tracked.save(doc, safe=True)
 

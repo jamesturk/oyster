@@ -26,7 +26,7 @@ class S3Storage(object):
         """ upload the document to S3 """
         aws_prefix = self._get_opt(tracked_doc['doc_class'], 'AWS_PREFIX', '')
         aws_bucket = self._get_opt(tracked_doc['doc_class'], 'AWS_BUCKET')
-        k = boto.s3.key.Key(aws_bucket)
+        k = boto.s3.key.Key(self.bucket)
         key_name = aws_prefix + tracked_doc['_id']
         k.key = key_name
         headers = {'x-amz-acl': 'public-read',
