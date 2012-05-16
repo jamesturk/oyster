@@ -18,6 +18,9 @@ class ElasticSearchPush(Task):
 
         try:
             text = kernel.extract_text(doc)
+            if not text:
+                self.log.info('no text for %s', doc_id,
+                              extra={'doc_class':doc['doc_class']})
 
             self.log.info('tracked %s', doc_id,
                           extra={'doc_class':doc['doc_class']})
