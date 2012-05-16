@@ -1,6 +1,6 @@
-    <tr{% if log.error %} class="error" {% endif %}>
-        <td>{{log.action}}</td>
-        <td>{{log.doc_id}} - {{log.url}}</td>
-        <td>{{log.timestamp.strftime("%Y-%m-%d %H:%M:%S")}}</td>
-        <td>{% if log.error %}{{log.error}}{% endif %}</td>
+    <tr class="{{log.levelname.lower}}">
+        <td>{{log.name}}</td>
+        <td>{{log.message}}</td>
+        <td>{{log.created.strftime("%Y-%m-%d %H:%M:%S")}}</td>
+        <td>{% if log.exc_info %}{{log.exc_info}}{% endif %}</td>
     </tr>

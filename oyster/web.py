@@ -51,18 +51,8 @@ def index():
     status = {
         'tracking': kernel.db.tracked.count(),
         'need_update': kernel.get_update_queue_size(),
-        'logs': list(kernel.db.logs.find().sort('$natural', -1).limit(20)),
+        'logs': list(kernel.db.logs.find().sort('$natural', -1).limit(100)),
         'mongo_host': settings.MONGO_HOST,
-    }
-    return status
-
-
-@app.route('/status/')
-@api_wrapper()
-def doc_list():
-    status = {
-        'tracking': kernel.db.tracked.count(),
-        'need_update': kernel.get_update_queue_size(),
     }
     return status
 
