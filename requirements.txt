@@ -2,4 +2,4 @@ scrapelib
 pymongo>=2.0
 flask
 nose
-celery
+celery==2.5.3
