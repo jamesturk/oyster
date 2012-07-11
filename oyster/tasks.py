@@ -22,6 +22,7 @@ class UpdateTaskScheduler(PeriodicTask):
 
     # 60s tick
     run_every = 60
+    ignore_result = True
 
     def run(self):
         # if the update queue isn't empty, wait to add more
