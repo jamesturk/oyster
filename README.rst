@@ -1,3 +1,5 @@
+**DEPRECATED** - this project is abandoned & will not be seeing future updates
+
 ======
 oyster
 ======
